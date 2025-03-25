@@ -6,11 +6,15 @@ import {
   StyleSheet,
   Modal,
   Text,
+  KeyboardAvoidingView,
+  Platform,
+  TextInput
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 
 export default function CustomTabBar({ state, descriptors, navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
+  const [confession, setConfession] = useState("");
 
   const handlePlusPress = () => {
     setModalVisible(true);
@@ -72,17 +76,19 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
     );
   };
 
+  const charCount = confession.length;
+  const MAX_CHAR = 100;
+
+  const handlePostConfession = () => {
+    console.log("Confession posted:", confession);
+    setModalVisible(false);
+    setConfession("");
+  };
+
   return (
     <View style={styles.tabBarContainer}>
       {/* Background shape */}
       <View style={styles.tabBarBackground} />
-      {/* <View style={styles.blurContainer}>
-      <BlurView
-        style={styles.blurView}
-        tint="light"
-        intensity={40}
-      />
-      </View> */}
 
       {/* A row that holds two sub-containers: left & right */}
       <View style={styles.tabWrapper}>
@@ -111,18 +117,58 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
+        
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={{ color: "#000", fontSize: 18, marginBottom: 20 }}>
-              This is your custom modal!
-            </Text>
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              style={styles.closeButton}
-            >
-              <Text style={{ color: "#fff" }}>Close</Text>
-            </TouchableOpacity>
-          </View>
+          <KeyboardAvoidingView
+            style={styles.modalContainer}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+          >
+            {/* The card-like modal content */}
+            <View style={styles.postCard}>
+              {/* Header Row */}
+              <View style={styles.headerRow}>
+                <Icon name="heart" size={20} color="#E94560" />
+                <Text style={styles.headerTitle}> Post Your Confession</Text>
+              </View>
+
+              <View style={styles.separator} />
+
+
+              {/* Text Input for the Confession */}
+              <View style={styles.textInputContainer}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="What's in your heart? Type your confession here..."
+                  placeholderTextColor="#aaa"
+                  multiline
+                  maxLength={MAX_CHAR}
+                  value={confession}
+                  onChangeText={setConfession}
+                />
+              </View>
+
+              {/* Character Count */}
+              <Text style={styles.charCount}>
+                {charCount}/{MAX_CHAR} characters
+              </Text>
+
+              {/* Post Button */}
+              <TouchableOpacity
+                style={styles.postButton}
+                onPress={handlePostConfession}
+              >
+                <Text style={styles.postButtonText}>
+                  Post Confession
+                </Text>
+              </TouchableOpacity>
+
+              {/* Anonymous Note */}
+              <Text style={styles.anonymousNote}>
+                Your confession will be posted anonymously
+              </Text>
+
+            </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
     </View>
@@ -138,26 +184,6 @@ const styles = StyleSheet.create({
     height: 70,
     alignItems: "center",
   },
-  // blurContainer: {
-  //   position: "absolute",
-  //   bottom: 0,
-  //   left: 10,
-  //   right: 10,
-  //   height: 70,
-  //   borderRadius: 35,
-  //   overflow: "hidden", 
-  //   shadowColor: "#000",
-  //   shadowOffset: { width: 0, height: 5 },
-  //   shadowOpacity: 0.2,
-  //   shadowRadius: 6,
-  //   elevation: 5,
-  // },
-  // blurView: {
-  //   flex: 1, 
-  //   backgroundColor: "rgba(255, 255, 255, 0.2)",
-  //   borderWidth: 1,
-  //   borderColor: "rgba(255, 255, 255, 0.3)",
-  // },
   tabBarBackground: {
     position: "absolute",
     bottom: 0,
@@ -215,22 +241,74 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "rgba(0,0,0,0.75)",
     justifyContent: "center",
     alignItems: "center",
   },
   modalContent: {
-    width: "80%",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 20,
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
   },
-  closeButton: {
-    backgroundColor: "#32CD32",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+  postCard: {
+    width: "80%",
+    backgroundColor: "rgba(26, 26, 26, 1)",
+    borderRadius: 10,
+    padding: 20,
+    alignSelf: "center",
+    // modal border
+    // borderWidth: 0.5,
+    // borderColor: "#E94560",
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    bottom: 30,
+    marginTop: 30,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#E94560",
+    marginLeft: 5,
+    marginBottom: 5,
+  },
+  textInputContainer: {
+    backgroundColor: "rgba(26, 26, 26, 1)",
+    borderRadius: 8,
+    padding: 2,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#E94560",
+  },
+  textInput: {
+    height: 80,
+    textAlignVertical: "top", 
+    color: "#333",
+  },
+  charCount: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 10,
+    alignSelf: "flex-end"
+  },
+  postButton: {
+    backgroundColor: "#E94560",
     borderRadius: 6,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  postButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  anonymousNote: {
+    fontSize: 12,
+    color: "#777",
+    textAlign: "center",
+    marginBottom: 5,
   },
 });
 
