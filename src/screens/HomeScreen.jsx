@@ -5,13 +5,13 @@ import {
   FlatList,
   StyleSheet,
   Dimensions,
-  StatusBar, 
+  StatusBar,
   TouchableOpacity
 } from "react-native";
 import { useState } from "react";
 import Icon from "react-native-vector-icons/Feather";
 import { confessionsData } from "../constants/confessionsData";
-import { renderContentWithMentions } from "../helpers/renderContentWithMentions"; 
+import { renderContentWithMentions } from "../helpers/renderContentWithMentions";
 import CommentSection from "../components/CommentSection";
 
 const { width } = Dimensions.get("window");
@@ -44,7 +44,7 @@ const HomeScreen = () => {
         )}
       </Text>
       <View style={styles.bottomRow}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.iconRow}
           onPress={() => handleOpenComments(item)}
         >
@@ -86,23 +86,23 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121212", 
+    backgroundColor: "#121212",
     paddingHorizontal: 16,
   },
   title: {
     fontSize: 24,
-    color: "#E94560", 
+    color: "#E94560",
     fontWeight: "bold",
     marginVertical: 16,
-    marginTop: 12, 
+    marginTop: 12,
     marginBottom: 10,
     padding: 10
   },
   listContent: {
-    paddingBottom: 16, 
+    paddingBottom: 16,
   },
   card: {
-    backgroundColor: "#1E1E1E", 
+    backgroundColor: "#1E1E1E",
     borderRadius: 8,
     padding: 16,
     marginBottom: 16,
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 4,
-    alignSelf: "flex-start", 
+    alignSelf: "flex-start",
     marginBottom: 8,
   },
   trendingText: {

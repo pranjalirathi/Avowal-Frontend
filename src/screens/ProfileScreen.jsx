@@ -1,198 +1,193 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
   SafeAreaView,
+  Text,
+  StyleSheet,
+  Image,
   ScrollView,
+  View,
+  TouchableOpacity,
+  Dimensions,
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 
-export default function ProfileScreen() {
-  const [displayName, setDisplayName] = useState("Coder");
-  const [email, setEmail] = useState("pranja2011@gmail.com");
-  const [username, setUsername] = useState("pranja2011");
-  const [bio, setBio] = useState("Hello world! Coding and exploring new ideas");
+const ProfileScreen = () => {
+  const email = "pranj@edbuxample.com";
+  const [fontSize, setFontSize] = useState(18);
+  const screenWidth = Dimensions.get("window").width - 50;
 
-  const [editingField, setEditingField] = useState(null);
-
-  const isEditing = (field) => editingField === field;
-
-  const toggleEditMode = (field) => {
-    if (isEditing(field)) {
-      setEditingField(null);
+  useEffect(() => {
+    if (email.length > 30) {
+      setFontSize(14);
     } else {
-      setEditingField(field);
+      setFontSize(18);
     }
-  };
+  }, [email]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.heading}>My Account</Text>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>Profile</Text>
 
-        {/* Display Name Row */}
-        <View style={styles.fieldContainer}>
-          <View style={styles.labelValueContainer}>
-            <Text style={styles.label}>DISPLAY NAME</Text>
-            {isEditing("displayName") ? (
-              <TextInput
-                style={[styles.value, styles.editableValue]}
-                value={displayName}
-                onChangeText={setDisplayName}
-                autoFocus
-                underlineColorAndroid="transparent"
-              />
-            ) : (
-              <Text style={styles.value}>{displayName}</Text>
-            )}
+      <ScrollView style={styles.content}>
+        {/* Image Container */}
+        <View style={styles.imageContainer}>
+          <Image source={require("../../assets/prashu.jpg")} style={styles.profileImage} />
+          <View style={styles.overlay} />
+          <View style={styles.infoContainer}>
+            <Text style={styles.userName}>Pranjali Rathi, 21</Text>
+            <View style={styles.matchContainer}>
+              <Text style={styles.matchText}>Developer</Text>
+            </View>
           </View>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => toggleEditMode("displayName")}
-          >
-            <Icon
-              name={isEditing("displayName") ? "check" : "edit"}
-              size={18}
-              color="#fff"
-            />
-          </TouchableOpacity>
         </View>
 
-        {/* Email Row */}
-        <View style={styles.fieldContainer}>
-          <View style={styles.labelValueContainer}>
-            <Text style={styles.label}>EMAIL</Text>
-            {isEditing("email") ? (
-              <TextInput
-                style={[styles.value, styles.editableValue]}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoFocus
-                underlineColorAndroid="transparent"
-              />
-            ) : (
-              <Text style={styles.value}>{email}</Text>
-            )}
+        {/* Details Container */}
+        <View style={styles.detailsContainer}>
+          {/* Username */}
+          <Text style={styles.detailLabel}>Username</Text>
+          <View style={styles.usernameContainer}>
+            <Text style={styles.detailValue}>iprash05</Text>
+            <TouchableOpacity>
+              <Icon name="edit-2" size={18} color="#E94560" style={styles.editIcon} />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => toggleEditMode("email")}
-          >
-            <Icon
-              name={isEditing("email") ? "check" : "edit"}
-              size={18}
-              color="#fff"
-            />
-          </TouchableOpacity>
-        </View>
 
-        {/* Username Row */}
-        <View style={styles.fieldContainer}>
-          <View style={styles.labelValueContainer}>
-            <Text style={styles.label}>USERNAME</Text>
-            {isEditing("username") ? (
-              <TextInput
-                style={[styles.value, styles.editableValue]}
-                value={username}
-                onChangeText={setUsername}
-                autoFocus
-                underlineColorAndroid="transparent"
-              />
-            ) : (
-              <Text style={styles.value}>{username}</Text>
-            )}
+          {/* Email */}
+          <Text style={styles.detailLabel}>Email</Text>
+          <View style={styles.emailContainer}>
+            <Text style={[styles.detailValue, { fontSize }]} numberOfLines={1}>
+              {email}
+            </Text>
           </View>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => toggleEditMode("username")}
-          >
-            <Icon
-              name={isEditing("username") ? "check" : "edit"}
-              size={18}
-              color="#fff"
-            />
-          </TouchableOpacity>
-        </View>
 
-        {/* Bio Row */}
-        <View style={styles.fieldContainer}>
-          <View style={styles.labelValueContainer}>
-            <Text style={styles.label}>BIO</Text>
-            {isEditing("bio") ? (
-              <TextInput
-                style={[styles.value, styles.editableValue]}
-                value={bio}
-                onChangeText={setBio}
-                autoFocus
-                multiline
-                underlineColorAndroid="transparent"
-              />
-            ) : (
-              <Text style={styles.value}>{bio}</Text>
-            )}
-          </View>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => toggleEditMode("bio")}
-          >
-            <Icon
-              name={isEditing("bio") ? "check" : "edit"}
-              size={18}
-              color="#fff"
-            />
+          {/* Separator Line */}
+          <View style={styles.separator} />
+
+          {/* Reset Password Button */}
+          <TouchableOpacity style={styles.button}>
+            <Text style={styles.buttonText}>Reset Password</Text>
+          </TouchableOpacity>
+
+          {/* Logout Button */}
+          <TouchableOpacity style={[styles.button, styles.logoutButton]}>
+            <Text style={styles.buttonText}>Logout</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
-}
+};
+
+export default ProfileScreen;
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#121212", // Dark background
-  },
   container: {
-    padding: 16,
+    flex: 1,
+    backgroundColor: "#121212",
   },
-  heading: {
-    color: "#fff",
-    fontSize: 22,
+  title: {
+    fontSize: 24,
+    color: "#E94560",
     fontWeight: "bold",
-    marginBottom: 20,
+    marginTop: 12,
+    marginLeft: 14,
+    marginBottom: 10,
+    padding: 10,
   },
-  fieldContainer: {
+  content: {},
+  imageContainer: {
+    position: "relative",
+    width: "100%",
+    height: 350,
+    marginBottom: -12,
+  },
+  profileImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  infoContainer: {
+    position: "absolute",
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    top: "48%",
+  },
+  userName: {
+    color: "#fff",
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  matchContainer: {
+    alignItems: "center",
+    backgroundColor: "#1a1a1a",
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginTop: 10,
+  },
+  matchText: {
+    color: "#E94560",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  detailsContainer: {
+    backgroundColor: "#222",
+    padding: 25,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    marginBottom: 80,
+    height: "100%",
+    gap: 4
+  },
+  usernameContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1f1f1f",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 10,
     justifyContent: "space-between",
   },
-  labelValueContainer: {
-    flex: 1,
+  editIcon: {
+    marginLeft: 8,
+    paddingBottom: 2,
   },
-  label: {
-    fontSize: 12,
-    color: "#ccc",
-    marginBottom: 4,
-    textTransform: "uppercase",
-  },
-  value: {
+  detailLabel: {
     fontSize: 16,
+    color: "#aaa",
+  },
+  emailContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  detailValue: {
+    top: 0,
+    marginBottom: 2,
+    fontSize: 18,
     color: "#fff",
+    flexShrink: 1,
   },
-  editableValue: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#4285F4", // Blue underline when editing
+  separator: {
+    height: 1,
+    backgroundColor: "#444",
+    marginVertical: 16,
   },
-  iconButton: {
-    marginLeft: 16,
-    padding: 6,
+  button: {
+    backgroundColor: "#E94560",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  logoutButton: {
+    backgroundColor: "#444",
   },
 });
