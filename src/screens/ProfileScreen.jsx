@@ -10,10 +10,13 @@ import {
   Dimensions,
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
+import LogoutModal from "../components/LogoutModal";
 
 const ProfileScreen = () => {
   const email = "pranj@edbuxample.com";
   const [fontSize, setFontSize] = useState(18);
+  const [modalVisible, setModalVisible] = useState(false);
+
   const screenWidth = Dimensions.get("window").width - 50;
 
   useEffect(() => {
@@ -23,6 +26,12 @@ const ProfileScreen = () => {
       setFontSize(18);
     }
   }, [email]);
+
+  const handleLogout = () => {
+    console.log("User logged out");
+    setModalVisible(false);
+    //func api
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -69,10 +78,16 @@ const ProfileScreen = () => {
           </TouchableOpacity>
 
           {/* Logout Button */}
-          <TouchableOpacity style={[styles.button, styles.logoutButton]}>
+          <TouchableOpacity style={[styles.button, styles.logoutButton]} onPress={() => setModalVisible(true)}>
             <Text style={styles.buttonText}>Logout</Text>
           </TouchableOpacity>
         </View>
+
+        <LogoutModal
+        modalVisible={modalVisible}
+        setModalVisible={setModalVisible}
+        handleLogout={handleLogout}
+      />
       </ScrollView>
     </SafeAreaView>
   );
