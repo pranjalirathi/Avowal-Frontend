@@ -1,4 +1,3 @@
-import { BlurView } from "expo-blur";
 import React, { useState } from "react";
 import {
   View,
@@ -10,7 +9,7 @@ import {
   Platform,
   TextInput
 } from "react-native";
-import Icon from "react-native-vector-icons/Feather";
+import Icon from "react-native-vector-icons/Ionicons";
 
 export default function CustomTabBar({ state, descriptors, navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -20,34 +19,31 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
     setModalVisible(true);
   };
 
-  const leftRoutes = state.routes.slice(0, 2);   // [Home, Feed]
-  const rightRoutes = state.routes.slice(2);     // [Settings, Profile]
+  const leftRoutes = state.routes.slice(0, 2);   
+  const rightRoutes = state.routes.slice(2);    
 
-  // Helper to render each tab icon
   const renderTabItem = (route, index) => {
     const { options } = descriptors[route.key];
     const isFocused = state.index === state.routes.indexOf(route);
 
-    // Determine icon name based on route
-    let iconName = "circle";
+    let iconName;
     switch (route.name) {
       case "Home":
-        iconName = "home";
+        iconName = isFocused ? "home" : "home-outline";
         break;
       case "Feed":
-        iconName = "clock";
+        iconName = isFocused ? "search" : "search-outline";
         break;
-      case "Settings":
-        iconName = "settings";
+      case "Notification":
+        iconName = isFocused ? "notifications" : "notifications-outline";
         break;
       case "Profile":
-        iconName = "user";
+        iconName = isFocused ? "person" : "person-outline";
         break;
       default:
-        iconName = "circle";
+        iconName = isFocused ? "ellipse" : "ellipse-outline";
     }
 
-    // Handle tab press
     const onPress = () => {
       const event = navigation.emit({
         type: "tabPress",
@@ -90,27 +86,23 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
       {/* Background shape */}
       <View style={styles.tabBarBackground} />
 
-      {/* A row that holds two sub-containers: left & right */}
       <View style={styles.tabWrapper}>
-        {/* Left icons */}
         <View style={styles.leftContainer}>
           {leftRoutes.map((route, i) => renderTabItem(route, i))}
         </View>
-
-        {/* Right icons */}
         <View style={styles.rightContainer}>
           {rightRoutes.map((route, i) => renderTabItem(route, i))}
         </View>
       </View>
 
-      {/* Floating '+' button in the center */}
+      {/* Floating '+' button  */}
       <View style={styles.plusButtonContainer}>
         <TouchableOpacity onPress={handlePlusPress} style={styles.plusButton}>
-          <Icon name="plus" size={28} color="#fff" />
+          <Icon name="add" size={28} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      {/* Simple Modal triggered by '+' */}
+      {/*  Modal*/}
       <Modal
         visible={modalVisible}
         transparent

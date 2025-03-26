@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import HomeScreen from "../screens/HomeScreen";
 import FeedScreen from "../screens/FeedScreen";
-import SettingsScreen from "../screens/SettingsScreen";
+import NotificationScreen from "../screens/NotificationScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import CustomTabBar from "../components/CustomTabBar"; 
 
@@ -19,7 +19,7 @@ export default function TabNavigation() {
       >
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Feed" component={FeedScreen} />
-        <Tab.Screen name="Settings" component={SettingsScreen} />
+        <Tab.Screen name="Notification" component={NotificationScreen} />
         <Tab.Screen name="Profile" component={ProfileScreen} />
       </Tab.Navigator>
     </SafeAreaView>
