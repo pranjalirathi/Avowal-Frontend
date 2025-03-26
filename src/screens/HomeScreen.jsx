@@ -6,14 +6,29 @@ import {
   StyleSheet,
   Dimensions,
   StatusBar, 
+  TouchableOpacity
 } from "react-native";
+import { useState } from "react";
 import Icon from "react-native-vector-icons/Feather";
 import { confessionsData } from "../constants/confessionsData";
 import { renderContentWithMentions } from "../helpers/renderContentWithMentions"; 
+import CommentSection from "../components/CommentSection";
 
 const { width } = Dimensions.get("window");
 
 const HomeScreen = () => {
+  const [commentsVisible, setCommentsVisible] = useState(false);
+  const [selectedConfession, setSelectedConfession] = useState(null);
+
+  const handleOpenComments = (confession) => {
+    setSelectedConfession(confession);
+    setCommentsVisible(true);
+  };
+
+  const handlePostComment = (text) => {
+    console.log("New Comment:", text);
+  };
+
   const renderConfession = ({ item }) => (
     <View style={styles.card}>
       {item.comments > 10 && (
@@ -29,10 +44,13 @@ const HomeScreen = () => {
         )}
       </Text>
       <View style={styles.bottomRow}>
-        <View style={styles.iconRow}>
+        <TouchableOpacity 
+          style={styles.iconRow}
+          onPress={() => handleOpenComments(item)}
+        >
           <Icon name="message-circle" size={16} color="#E94560" />
           <Text style={styles.commentCount}>{item.comments}</Text>
-        </View>
+        </TouchableOpacity>
         <Text style={styles.timeText}>{item.time}</Text>
       </View>
     </View>
@@ -52,6 +70,15 @@ const HomeScreen = () => {
         showsVerticalScrollIndicator={false}
       />
       <StatusBar backgroundColor="#000000" barStyle="light-content" />
+
+      {/* Comment Section Modal */}
+      <CommentSection
+        visible={commentsVisible}
+        onClose={() => setCommentsVisible(false)}
+        comments={selectedConfession?.commentsList || []}
+        onPostComment={handlePostComment}
+      />
+
     </SafeAreaView>
   );
 };
