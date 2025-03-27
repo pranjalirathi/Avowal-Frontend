@@ -2,7 +2,7 @@
 export const confessionsData = [
   {
     id: "1",
-    text: "I’ve been secretly learning to play the guitar for 6 months to surprise my partner on our anniversary. I’m so nervous they might not like it, but I’ve put my heart into this.",
+    text: "I’ve been secretly learning to drive car for 6 months to surprise my partner on our anniversary. I’m so nervous they might not like it, but I’ve put my heart into this. But i think everything is shit. This guy does not give a fuck about anything andd he is cheating on me, i willslap him one day and i will take revernfge in fornt of eberyone ",
     comments: 12,
     time: "2 hours ago",
   },

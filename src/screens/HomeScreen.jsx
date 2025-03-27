@@ -19,6 +19,7 @@ const { width } = Dimensions.get("window");
 const HomeScreen = () => {
   const [commentsVisible, setCommentsVisible] = useState(false);
   const [selectedConfession, setSelectedConfession] = useState(null);
+  const [expandedConfessions, setExpandedConfessions] = useState({});
 
   const handleOpenComments = (confession) => {
     setSelectedConfession(confession);
@@ -29,39 +30,64 @@ const HomeScreen = () => {
     console.log("New Comment:", text);
   };
 
-  const renderConfession = ({ item }) => (
-    <View style={styles.card}>
-      {item.comments > 10 && (
-        <View style={styles.trendingBadge}>
-          <Text style={styles.trendingText}>Trending ❤‍🔥</Text>
-        </View>
-      )}
-      <Text style={styles.confessionText}>
-        {renderContentWithMentions(
-          item.text,
-          styles.confessionText,
-          styles.mentionText
+  const toggleExpand = (id) => {
+    setExpandedConfessions((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const renderConfession = ({ item }) => {
+    const isExpanded = expandedConfessions[item.id];
+    const confessionText = item.text;
+  
+    return (
+      <View style={styles.card}>
+        {item.comments > 10 && (
+          <View style={styles.trendingBadge}>
+            <Text style={styles.trendingText}>Trending ❤‍🔥</Text>
+          </View>
         )}
-      </Text>
-      <View style={styles.bottomRow}>
-        <TouchableOpacity
-          style={styles.iconRow}
-          onPress={() => handleOpenComments(item)}
-        >
-          <Icon name="message-circle" size={16} color="#E94560" />
-          <Text style={styles.commentCount}>{item.comments}</Text>
-        </TouchableOpacity>
-        <Text style={styles.timeText}>{item.time}</Text>
+        <Text style={styles.confessionText}>
+
+        {/* agar hua toh read more else we will show nothing */}
+        {renderContentWithMentions(
+            isExpanded ? confessionText : `${confessionText.slice(0, 250)}${confessionText.length > 250 ? "..." : ""}`,
+            styles.confessionText,
+            styles.mentionText
+          )}
+
+        </Text>
+        <View style={styles.bottomRow}>
+          <View style={styles.leftRow}>
+            <TouchableOpacity
+              style={styles.iconRow}
+              onPress={() => handleOpenComments(item)}
+            >
+              <Icon name="message-circle" size={16} color="#E94560" />
+              <Text style={styles.commentCount}>{item.comments}</Text>
+            </TouchableOpacity>
+  
+            {confessionText.length > 250 && (
+              <TouchableOpacity onPress={() => toggleExpand(item.id)}>
+                <Text style={styles.readMoreText}>
+                  {isExpanded ? "Read less" : "Read more..."}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+  
+          <Text style={styles.timeText}>{item.time}</Text>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Title at the top */}
       <Text style={styles.title}>Confessions</Text>
 
-      {/* List of confession cards */}
       <FlatList
         data={confessionsData}
         keyExtractor={(item) => item.id}
@@ -125,6 +151,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 12,
     lineHeight: 22,
+  },
+  leftRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  readMoreText: {
+    color: "#E94560",
+    fontSize: 14,
+    marginTop: 2,
+    fontWeight: "bold",
+    marginLeft: 8
   },
   mentionText: {
     color: "#E94560"
