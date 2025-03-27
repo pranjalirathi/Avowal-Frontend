@@ -9,7 +9,8 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
-import Icon from "react-native-vector-icons/Feather";
+import Icon from "react-native-vector-icons/AntDesign";
+import Icon2 from "react-native-vector-icons/MaterialIcons";
 import LogoutModal from "../components/LogoutModal";
 
 const ProfileScreen = () => {
@@ -52,30 +53,50 @@ const ProfileScreen = () => {
 
         {/* Details Container */}
         <View style={styles.detailsContainer}>
-          {/* Username */}
-          <Text style={styles.detailLabel}>Username</Text>
-          <View style={styles.usernameContainer}>
-            <Text style={styles.detailValue}>iprash05</Text>
-            <TouchableOpacity>
-              <Icon name="edit-2" size={18} color="#E94560" style={styles.editIcon} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Email */}
-          <Text style={styles.detailLabel}>Email</Text>
-          <View style={styles.emailContainer}>
-            <Text style={[styles.detailValue, { fontSize }]} numberOfLines={1}>
-              {email}
-            </Text>
-          </View>
 
           {/* Separator Line */}
           <View style={styles.separator} />
 
-          {/* Reset Password Button */}
-          <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Reset Password</Text>
-          </TouchableOpacity>
+          {/* Menu Options */}
+          <View style={styles.menuContainer}>
+            <TouchableOpacity style={styles.menuItem}>
+              <Icon name="user" size={20} color="#E94560" />
+              <View style={styles.menuTextContainer}>
+                <Text style={styles.menuTitle}>Edit Username</Text>
+                <Text style={styles.menuSubtitle}>iprash05</Text>
+              </View>
+            </TouchableOpacity>
+
+            <View style={styles.menuItem}>
+              <Icon2 name="alternate-email" size={20} color="#E94560" />
+              <View style={styles.menuTextContainer}>
+                <Text style={styles.menuTitle}>Email</Text>
+                <Text style={styles.menuSubtitle}>pranjali.2201119ec@iiitbh.ac.in</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity style={styles.menuItem}>
+              <Icon name="staro" size={20} color="#E94560" />
+              <View style={styles.menuTextContainer}>
+                <Text style={[ styles.menuTitle, styles.editMenu ]}>Edit Relationship Status</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.menuItem}>
+              <Icon name="picture" size={20} color="#E94560" />
+              <View style={styles.menuTextContainer}>
+                <Text style={[ styles.menuTitle, styles.editMenu ]}>Edit Profile Pic</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.menuItem}>
+              <Icon name="delete" size={20} color="#E94560" />
+              <View style={styles.menuTextContainer}>
+                <Text style={[ styles.menuTitle, styles.editMenu ]}>Delete Account</Text>
+              </View>
+            </TouchableOpacity>
+
+          </View>
 
           {/* Logout Button */}
           <TouchableOpacity style={[styles.button, styles.logoutButton]} onPress={() => setModalVisible(true)}>
@@ -170,6 +191,7 @@ const styles = StyleSheet.create({
     paddingBottom: 2,
   },
   detailLabel: {
+    top: 2,
     fontSize: 16,
     color: "#aaa",
   },
@@ -185,10 +207,43 @@ const styles = StyleSheet.create({
     color: "#fff",
     flexShrink: 1,
   },
-  separator: {
-    height: 1,
-    backgroundColor: "#444",
-    marginVertical: 16,
+  // separator: {
+  //   height: 1,
+  //   backgroundColor: "#444",
+  //   marginVertical: 2,
+  // },
+  menuContainer: {
+    marginVertical: 0,
+    backgroundColor: "#222",
+    borderRadius: 8,
+    padding: 2,
+  },
+  
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    // paddingHorizontal: 0,
+    borderBottomWidth: 1,  
+    borderBottomColor: "#444",
+  },
+  
+  menuTextContainer: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  menuTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  menuSubtitle: {
+    fontSize: 14,
+    color: "#aaa",
+  },  
+  editMenu: {
+    marginTop: 5,
+    marginBottom: 5
   },
   button: {
     backgroundColor: "#E94560",
@@ -198,11 +253,13 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   buttonText: {
-    color: "#fff",
+    color: "#E94560",
     fontSize: 16,
     fontWeight: "bold",
   },
   logoutButton: {
-    backgroundColor: "#444",
+    backgroundColor: "#1E1E1E",
+    borderWidth: 0.8,
+    borderColor: "#E94560",
   },
 });
