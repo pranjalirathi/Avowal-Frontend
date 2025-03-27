@@ -10,7 +10,7 @@ import {
 const ComingSoonScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
-
+    
       <Text style={styles.title}>Notifications </Text>
 
       <View style={styles.content}>
