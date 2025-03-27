@@ -12,11 +12,13 @@ import {
 import Icon from "react-native-vector-icons/AntDesign";
 import Icon2 from "react-native-vector-icons/MaterialIcons";
 import LogoutModal from "../components/LogoutModal";
+import DeleteModal from "../components/DeleteModal";
 
 const ProfileScreen = () => {
   const email = "pranj@edbuxample.com";
   const [fontSize, setFontSize] = useState(18);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const screenWidth = Dimensions.get("window").width - 50;
 
@@ -30,9 +32,16 @@ const ProfileScreen = () => {
 
   const handleLogout = () => {
     console.log("User logged out");
-    setModalVisible(false);
+    setLogoutModalVisible(false);
     //func api
   };
+
+
+  const handleDelete = () => {
+    console.log("Account deleted");
+    setDeleteModalVisible(false);
+  };
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -89,7 +98,7 @@ const ProfileScreen = () => {
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => setDeleteModalVisible(true)}>
               <Icon name="delete" size={20} color="#E94560" />
               <View style={styles.menuTextContainer}>
                 <Text style={[ styles.menuTitle, styles.editMenu ]}>Delete Account</Text>
@@ -99,15 +108,20 @@ const ProfileScreen = () => {
           </View>
 
           {/* Logout Button */}
-          <TouchableOpacity style={[styles.button, styles.logoutButton]} onPress={() => setModalVisible(true)}>
+          <TouchableOpacity style={[styles.button, styles.logoutButton]} onPress={() => setLogoutModalVisible(true)}>
             <Text style={styles.buttonText}>Logout</Text>
           </TouchableOpacity>
         </View>
 
         <LogoutModal
-        modalVisible={modalVisible}
-        setModalVisible={setModalVisible}
+        modalVisible={logoutModalVisible}
+        setModalVisible={setLogoutModalVisible}
         handleLogout={handleLogout}
+      />
+        <DeleteModal
+        modalVisible={deleteModalVisible}
+        setModalVisible={setDeleteModalVisible}
+        handleDelete={handleDelete}
       />
       </ScrollView>
     </SafeAreaView>
