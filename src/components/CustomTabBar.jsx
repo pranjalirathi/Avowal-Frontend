@@ -73,7 +73,7 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
   };
 
   const charCount = confession.length;
-  const MAX_CHAR = 100;
+  const MAX_CHAR = 350;
 
   const handlePostConfession = () => {
     console.log("Confession posted:", confession);
@@ -119,12 +119,8 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
             <View style={styles.postCard}>
               {/* Header Row */}
               <View style={styles.headerRow}>
-                <Icon name="heart" size={20} color="#E94560" />
-                <Text style={styles.headerTitle}> Post Your Confession</Text>
+                <Text style={styles.headerTitle}>Confess</Text>
               </View>
-
-              <View style={styles.separator} />
-
 
               {/* Text Input for the Confession */}
               <View style={styles.textInputContainer}>
@@ -150,7 +146,7 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
                 onPress={handlePostConfession}
               >
                 <Text style={styles.postButtonText}>
-                  Post Confession
+                  Post
                 </Text>
               </TouchableOpacity>
 
@@ -248,41 +244,40 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     alignSelf: "center",
-    // modal border
-    // borderWidth: 0.5,
-    // borderColor: "#E94560",
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    bottom: 30,
-    marginTop: 30,
+    bottom: 20,
+    marginTop: 20,
+    justifyContent: "center",
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#E94560",
     marginLeft: 5,
-    marginBottom: 5,
   },
   textInputContainer: {
     backgroundColor: "rgba(26, 26, 26, 1)",
     borderRadius: 8,
-    padding: 2,
-    marginBottom: 15,
+    padding: 1,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: "#E94560",
   },
   textInput: {
     height: 80,
     textAlignVertical: "top", 
-    color: "#333",
+    color: "#E0E0E0",
+    paddingBottom: 0,
   },
   charCount: {
     fontSize: 12,
     color: "#666",
-    marginBottom: 10,
-    alignSelf: "flex-end"
+    marginBottom: 20,
+    alignSelf: "flex-end",
+    marginTop: -5
   },
   postButton: {
     backgroundColor: "#E94560",
