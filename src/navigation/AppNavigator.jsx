@@ -6,7 +6,7 @@ import AppStack from './AppStack';
 import { ActivityIndicator, View } from 'react-native';
 
 const AppNavigator = () => {
-  const { userToken, isLoading } = useContext(AuthContext);
+  const { isLoading, userToken } = useContext(AuthContext);
 
   if (isLoading) {
     return (
@@ -18,9 +18,9 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer>
-      {/* {userToken ? <AppStack /> : <AuthStack />} */}
-      <AppStack />
-      {/* <AuthStack /> */}
+      {/* {userToken !== null ? <AppStack /> : <AuthStack />} */}
+      {/* <AppStack /> */}
+      <AuthStack />
     </NavigationContainer>
   );
 };

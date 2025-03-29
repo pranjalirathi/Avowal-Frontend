@@ -1,51 +1,54 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import CustomAlert from '../components/Alert';
+import { BASE_URL } from "../constants/api";
 
 const SignupScreen = ({ navigation }) => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [alertData, setAlertData] = useState(null); 
-  const [buttonColor, setButtonColor] = React.useState("#EF4444");
+  const [errorMessage, setErrorMessage] = useState(null); 
+  const [buttonColor, setButtonColor] = useState("#EF4444");
+
+  const validateInput = () => {
+    if (!username || !email || !password) {
+      setErrorMessage('Please fill in all fields.');
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setErrorMessage('Invalid email format.');
+      return false;
+    }
+    if (password.length < 8) {
+      setErrorMessage('Password must be at least 8 characters.');
+      return false;
+    }
+    return true;
+  };
 
   const handleSignup = () => {
-    if (!username || !email || !password) {
-      setAlertData({
-        type: 'error',
-        message: 'Please fill in all fields.',
-      });
-      return;
-    }
-
-    fetch('http://your-backend-url/signup', {
+    if (!validateInput()) return;
+    
+    fetch(`${BASE_URL}/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, email, password }),
     })
-      .then(response => response.json())
-      .then(data => {
-        if (data.message && data.message !== 'User created successfully') {
-          setAlertData({
-            type: 'error',
-            message: data.message,
-          });
-        } else {
-          setAlertData({
-            type: 'success',
-            message: 'Account created successfully. Please log in.',
-          });
-        //   setTimeout(() => navigation.replace('LoginScreen'), 1500);
+      .then(async (response) => {
+        console.log(response); 
+        const data = await response.json(); 
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Signup failed.');
         }
+        setErrorMessage(null);
+        navigation.navigate("LoginScreen");
       })
-      .catch(error => {
-        setAlertData({
-          type: 'error',
-          message: 'Signup failed. Please try again.',
-        });
-        console.error('Signup error:', error);
+      .catch((error) => {
+        console.log(error.message);
+        setErrorMessage(error.message);
       });
   };
 
@@ -101,6 +104,8 @@ const SignupScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
+        {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
+
         {/* Signup Button */}
         <TouchableOpacity style={styles.signupButton} onPress={handleSignup} onPressIn={() => setButtonColor("#DC2626")} // Darker red on press
   onPressOut={() => setButtonColor("#EF4444")}>
@@ -115,15 +120,7 @@ const SignupScreen = ({ navigation }) => {
           </Text>
         </Text>
       </View>
-
-      {/* Render custom alert if alertData exists */}
-      {alertData && (
-        <CustomAlert
-          type={alertData.type}
-          message={alertData.message}
-          onClose={() => setAlertData(null)}
-        />
-      )}
+      
       <StatusBar backgroundColor="#000000" barStyle="light-content" />
     </View>
   );
@@ -201,6 +198,13 @@ const styles = StyleSheet.create({
   loginLink: {
     color: '#E94560',
     fontWeight: 'bold',
+  },
+  errorText: {
+    color: '#E94560',
+    fontSize: 14,
+    marginTop: 4,
+    mmarginBottom: 10,
+    textAlign: 'center',
   },
 });
 
