@@ -1,13 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, StatusBar } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
+import { AuthContext } from '../context/AuthContext';
 
 const { width } = Dimensions.get('window'); 
 
 const LoginScreen = () => {
   const navigation = useNavigation();
+
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState(null); 
+  
+  const { login } = useContext(AuthContext);
+
+  const handleLogin = () => {
+    setErrorMessage(null);
+    
+    const formBody = new URLSearchParams();
+    formBody.append('username', email); 
+    formBody.append('password', password);
+  
+    fetch('http://10.0.2.2:8000/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formBody.toString(),
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || 'Login failed');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        login(data.access_token); 
+        navigation.navigate('AppStack', { screen: 'HomeScreen' });
+      })
+      .catch((error) => {
+        setErrorMessage(error.message);
+      });
+  };
+  
 
   return (
     <View style={styles.container}>
@@ -23,6 +61,8 @@ const LoginScreen = () => {
             style={styles.input}
             placeholder="Email"
             placeholderTextColor="#A1A1A1"
+            value={email}
+            onChangeText={setEmail}
           />
           <TouchableOpacity style={styles.icon}>
             <Icon name="mail" size={20} color="#A1A1A1" />
@@ -37,6 +77,8 @@ const LoginScreen = () => {
             placeholder="Password"
             placeholderTextColor="#A1A1A1"
             secureTextEntry={!passwordVisible}
+            value={password}
+            onChangeText={setPassword}
           />
           <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)} style={styles.icon}>
             <Icon name={passwordVisible ? 'eye' : 'eye-off'} size={20} color="#A1A1A1" />
@@ -48,9 +90,11 @@ const LoginScreen = () => {
           <Text style={styles.forgotPassword} onPress={() => navigation.navigate('ForgotPasswordScreen')}>Forgot Password?</Text>
         </TouchableOpacity>
 
+        {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
+
         {/* Login Button */}
-        <TouchableOpacity style={styles.loginButton}>
-          <Text style={styles.loginText}>Login</Text>
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <Text style={styles.loginText} >Login</Text>
         </TouchableOpacity>
 
         {/* Signup Text */}
@@ -148,6 +192,12 @@ const styles = StyleSheet.create({
   signupLink: {
     color: '#E94560',
     fontWeight: 'bold',
+  },
+  errorText: {
+    color: '#FF4C4C',
+    fontSize: 14,
+    marginBottom: 10,
+    textAlign: 'center',
   },
 });
 

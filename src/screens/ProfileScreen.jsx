@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   SafeAreaView,
   Text,
@@ -13,12 +13,19 @@ import Icon from "react-native-vector-icons/AntDesign";
 import Icon2 from "react-native-vector-icons/MaterialIcons";
 import LogoutModal from "../components/LogoutModal";
 import DeleteModal from "../components/DeleteModal";
+import { AuthContext } from "../context/AuthContext";
+import { useNavigation } from '@react-navigation/native';
 
 const ProfileScreen = () => {
+
+  const navigation = useNavigation();
+
   const email = "pranj@edbuxample.com";
   const [fontSize, setFontSize] = useState(18);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
+  const { logout } = useContext(AuthContext);
 
   const screenWidth = Dimensions.get("window").width - 50;
 
@@ -31,11 +38,12 @@ const ProfileScreen = () => {
   }, [email]);
 
   const handleLogout = () => {
-    console.log("User logged out");
+    console.log("before logout")
+    logout();
     setLogoutModalVisible(false);
-    //func api
-  };
-
+    // navigation.navigate("LoginScreen");
+    console.log("after logout")
+  }
 
   const handleDelete = () => {
     console.log("Account deleted");
