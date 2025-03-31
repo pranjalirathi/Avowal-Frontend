@@ -30,6 +30,8 @@ const FeedScreen = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [userDetails, setUserDetails] = useState(null); 
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
 
   const { userToken } = useContext(AuthContext);
 
@@ -93,6 +95,42 @@ const FeedScreen = () => {
     debouncedSearch(lowerCaseQuery);
   };
 
+  const fetchUserProfile = async (username) => {
+    if (!username) return;
+    setIsProfileLoading(true);
+
+    try {
+      const response = await fetch(
+        `https://avowal-backend.vercel.app/user?username=${encodeURIComponent(username)}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data.data)
+      setUserDetails(data.data); 
+    } catch (err) {
+      console.error("Profile fetch error:", err);
+      setUserDetails(null);
+    } finally {
+      setIsProfileLoading(false);
+    }
+  };
+
+  const handleUserPress = (user) => {
+    setSelectedUser(user);
+    fetchUserProfile(user.username); 
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -131,7 +169,7 @@ const FeedScreen = () => {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
-            onPress={() => setSelectedUser(item)}
+            onPress={() => handleUserPress(item)} 
             style={styles.userItem}
           >
             <Image
@@ -168,20 +206,28 @@ const FeedScreen = () => {
             style={styles.modalContent}
             onPress={(e) => e.stopPropagation()}
           >
-            <View style={styles.profilePicContainer}>
-              <Image
-                source={
-                  typeof selectedUser?.image === "string"
-                    ? { uri: selectedUser?.image }
-                    : selectedUser?.image
-                }
-                style={styles.profileImage}
-              />
-            </View>
-            <Text style={styles.modalStatus}>{selectedUser?.status}</Text>
-            <Text style={styles.modalName}>{selectedUser?.name}</Text>
-            <Text style={styles.modalEmail}>@{selectedUser?.username}</Text>
-            <Text style={styles.modalEmail}>{selectedUser?.email}</Text>
+            {isProfileLoading ? (
+              <ActivityIndicator size="large" color="#E94560" />
+            ) : userDetails ? (
+            <>
+              <View style={styles.profilePicContainer}>
+                <Image
+                  source={
+                    typeof selectedUser?.image === "string"
+                      ? { uri: selectedUser?.image }
+                      : selectedUser?.image
+                  }
+                  style={styles.profileImage}
+                />
+              </View>
+              <Text style={styles.modalStatus}>{userDetails?.relationship_status || "N/A"}</Text>
+              <Text style={styles.modalName}>{userDetails?.name || "No Name"}</Text>
+              <Text style={styles.modalEmail}>@{userDetails?.username}</Text>
+              <Text style={styles.modalEmail}>{userDetails?.email}</Text>
+            </>
+            ) : (
+              <Text style={styles.errorText}>Failed to load profile</Text>
+            )}
           </Pressable>
         </Pressable>
       </Modal>
