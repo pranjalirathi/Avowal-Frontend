@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, Status
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
+import { BASE_URL } from '../constants/api'
 
 const { width } = Dimensions.get('window'); 
 
@@ -23,7 +24,7 @@ const LoginScreen = () => {
     formBody.append('username', email); 
     formBody.append('password', password);
   
-    fetch('http://10.0.2.2:8000/login', {
+    fetch("https://avowal-backend.vercel.app/login", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -39,7 +40,6 @@ const LoginScreen = () => {
       })
       .then((data) => {
         login(data.access_token); 
-        navigation.navigate('AppStack', { screen: 'HomeScreen' });
       })
       .catch((error) => {
         setErrorMessage(error.message);
@@ -202,3 +202,5 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
+
+// har button mai jab tak network call poora na ho, response naa aaya tab tak activity indicator lagana hai and button ko disable kar do

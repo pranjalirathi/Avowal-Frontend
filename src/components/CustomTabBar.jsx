@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   TouchableOpacity,
@@ -7,16 +7,55 @@ import {
   Text,
   KeyboardAvoidingView,
   Platform,
-  TextInput
+  TextInput, 
+  TouchableWithoutFeedback,
+  Keyboard
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
+import { AuthContext } from "../context/AuthContext";
+import { BASE_URL } from '../constants/api'
+import { ActivityIndicator } from "react-native";
 
 export default function CustomTabBar({ state, descriptors, navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [confession, setConfession] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const { userToken } = useContext(AuthContext); 
 
   const handlePlusPress = () => {
+    setErrorMessage("");
     setModalVisible(true);
+  };
+
+  const postConfession = async (confessionContent) => {
+    try {
+      const response = await fetch("https://avowal-backend.vercel.app/confessions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${userToken}`,
+        },
+        body: JSON.stringify({ content: confessionContent }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Confession posted:", data.message);
+        setErrorMessage(""); 
+        return true;
+      } else {
+        const errorData = await response.json();
+        console.error("Error posting confession:", errorData.detail);
+        setErrorMessage(errorData.detail);
+        return false;
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      setErrorMessage("Network error. Please try again.");
+      return false;
+    }
   };
 
   const leftRoutes = state.routes.slice(0, 2);   
@@ -75,10 +114,19 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
   const charCount = confession.length;
   const MAX_CHAR = 350;
 
-  const handlePostConfession = () => {
-    console.log("Confession posted:", confession);
-    setModalVisible(false);
-    setConfession("");
+  const handlePostConfession = async () => {
+    if(confession.trim().length > 0){
+      setLoading(true); 
+      const success = await postConfession(confession);
+      if (success) {
+      setModalVisible(false);
+      setConfession("");
+    }
+    setLoading(false);
+  }
+    else{
+      console.log("Confesion canot be empty")
+    }
   };
 
   return (
@@ -107,10 +155,14 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
         visible={modalVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => {
+          setModalVisible(false); 
+          setConfession(""); 
+        }}
       >
         
         <View style={styles.modalOverlay}>
+        <TouchableWithoutFeedback>
           <KeyboardAvoidingView
             style={styles.modalContainer}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -131,7 +183,9 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
                   multiline
                   maxLength={MAX_CHAR}
                   value={confession}
-                  onChangeText={setConfession}
+                  onChangeText={(text) => {
+                    setConfession(text);
+                  }}
                 />
               </View>
 
@@ -140,14 +194,20 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
                 {charCount}/{MAX_CHAR} characters
               </Text>
 
+              {/* Error Message in Modal */}
+              {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
               {/* Post Button */}
               <TouchableOpacity
-                style={styles.postButton}
+                style={[styles.postButton, (loading || !confession.trim()) && { backgroundColor: "#ccc" }]}
+                disabled={loading || !confession.trim()}
                 onPress={handlePostConfession}
               >
-                <Text style={styles.postButtonText}>
-                  Post
-                </Text>
+                {loading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.postButtonText}>Post</Text>
+                  )}
               </TouchableOpacity>
 
               {/* Anonymous Note */}
@@ -157,6 +217,7 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
 
             </View>
           </KeyboardAvoidingView>
+          </TouchableWithoutFeedback>
         </View>
       </Modal>
     </View>
@@ -228,6 +289,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   modalOverlay: {
+    width: "100%",
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.75)",
     justifyContent: "center",
@@ -239,7 +301,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   postCard: {
-    width: "80%",
+    // width: "80%",
     backgroundColor: "rgba(26, 26, 26, 1)",
     borderRadius: 10,
     padding: 20,
@@ -275,7 +337,7 @@ const styles = StyleSheet.create({
   charCount: {
     fontSize: 12,
     color: "#666",
-    marginBottom: 20,
+    marginBottom: 12,
     alignSelf: "flex-end",
     marginTop: -5
   },
@@ -296,6 +358,11 @@ const styles = StyleSheet.create({
     color: "#777",
     textAlign: "center",
     marginBottom: 5,
+  },
+  errorText: {
+    color: "#E94560",
+    textAlign: "center",
+    marginBottom: 10,
   },
 });
 
