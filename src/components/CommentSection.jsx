@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  Keyboard,
+  TouchableWithoutFeedback
 } from 'react-native';
 import comments from '../constants/commentsData'; 
 import Icon from "react-native-vector-icons/Feather";
@@ -38,37 +40,47 @@ const CommentsModal = ({ visible, onClose }) => {
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       {/* Dark overlay */}
+      <TouchableWithoutFeedback
+          onPress={() => {
+          Keyboard.dismiss();
+          onClose();
+        }}
+      >
+
       <View style={styles.modalOverlay}>
-        {/* Modal Container */}
-        <View style={styles.modalContainer}>
-          {/* Header */}
-          <View style={styles.headerContainer}>
-            <Text style={styles.headerText}>Comments</Text>
-          </View>
+        <TouchableWithoutFeedback>
+          {/* Modal Container */}
+          <View style={styles.modalContainer}>
+            {/* Header */}
+            <View style={styles.headerContainer}>
+              <Text style={styles.headerText}>Comments</Text>
+            </View>
 
-          {/* Comments List */}
-          <FlatList
-            data={comments}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            style={styles.commentsList}
-          />
-
-          {/* Input Section */}
-          <SafeAreaView style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Add a comment..."
-              placeholderTextColor="#999"
-              value={newComment}
-              onChangeText={setNewComment}
+            {/* Comments List */}
+            <FlatList
+              data={comments}
+              keyExtractor={(item) => item.id}
+              renderItem={renderItem}
+              style={styles.commentsList}
             />
-            <TouchableOpacity style={styles.sendButton}>
-              <Icon name="send" style={styles.sendIcon} />
-            </TouchableOpacity>
-          </SafeAreaView>
+
+            {/* Input Section */}
+            <SafeAreaView style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Add a comment..."
+                placeholderTextColor="#999"
+                value={newComment}
+                onChangeText={setNewComment}
+              />
+              <TouchableOpacity style={styles.sendButton}>
+                <Icon name="send" style={styles.sendIcon} />
+              </TouchableOpacity>
+            </SafeAreaView>
+          </View>
+          </TouchableWithoutFeedback>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };
