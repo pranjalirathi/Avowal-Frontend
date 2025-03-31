@@ -162,7 +162,7 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
       >
         
         <View style={styles.modalOverlay}>
-        <TouchableWithoutFeedback>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <KeyboardAvoidingView
             style={styles.modalContainer}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -288,6 +288,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 6,
   },
+  modalContainer: {
+    width: "90%",
+    justifyContent: "center",
+  },
   modalOverlay: {
     width: "100%",
     flex: 1,
@@ -301,7 +305,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   postCard: {
-    // width: "80%",
+    width: "90%",
     backgroundColor: "rgba(26, 26, 26, 1)",
     borderRadius: 10,
     padding: 20,
