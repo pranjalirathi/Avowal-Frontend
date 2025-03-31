@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { AuthContext } from "../context/AuthContext";
+import { ConfessionsContext } from "../context/ConfessionsContext";
 import { BASE_URL } from '../constants/api'
 import { ActivityIndicator } from "react-native";
 
@@ -23,6 +24,7 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
   const [loading, setLoading] = useState(false);
 
   const { userToken } = useContext(AuthContext); 
+  const { triggerRefresh } = useContext(ConfessionsContext);
 
   const handlePlusPress = () => {
     setErrorMessage("");
@@ -156,6 +158,8 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
       if (success) {
       setModalVisible(false);
       setConfession("");
+      console.log("triggering refresh")
+      triggerRefresh();
     }
     setLoading(false);
   }

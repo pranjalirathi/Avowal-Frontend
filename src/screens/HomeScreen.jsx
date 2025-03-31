@@ -8,18 +8,30 @@ import {
   StatusBar,
   TouchableOpacity
 } from "react-native";
-import { useState } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import Icon from "react-native-vector-icons/Feather";
-import { confessionsData } from "../constants/confessionsData";
 import { renderContentWithMentions } from "../helpers/renderContentWithMentions";
 import CommentSection from "../components/CommentSection";
+import { AuthContext } from "../context/AuthContext";
+import { ConfessionsContext } from "../context/ConfessionsContext";
+import { BASE_URL } from "../constants/api";
+import { ActivityIndicator } from "react-native";
 
 const { width } = Dimensions.get("window");
 
 const HomeScreen = () => {
+  const [confessions, setConfessions] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [commentsVisible, setCommentsVisible] = useState(false);
   const [selectedConfession, setSelectedConfession] = useState(null);
-  const [expandedConfessions, setExpandedConfessions] = useState({});
+  const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const { refreshTimestamp } = useContext(ConfessionsContext);
+
+  const LIMIT=10;
+  const { userToken } = useContext(AuthContext);
 
   const handleOpenComments = (confession) => {
     setSelectedConfession(confession);
@@ -30,17 +42,98 @@ const HomeScreen = () => {
     console.log("New Comment:", text);
   };
 
-  const toggleExpand = (id) => {
-    setExpandedConfessions((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+  const fetchConfessions = async (pageToFetch = 0, shouldRefresh = false) => {
+    // Don't fetch if we're already at the end and it's not a refresh
+    if (!hasMore && !shouldRefresh && pageToFetch !== 0) return;
+    
+    if (pageToFetch === 0) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+    
+    try {
+      const skip = pageToFetch * LIMIT;
+      const response = await fetch(`${BASE_URL}/confessions?skip=${skip}&limit=${LIMIT}`, {
+        headers: {
+          "Authorization": `Bearer ${userToken}`,
+        },
+      });
+      const result = await response.json();
+      
+      if (response.ok) {
+        const newConfessions = result.data;
+        
+        // Check if we've reached the end
+        if (newConfessions.length < LIMIT) {
+          setHasMore(false);
+        }
+        
+        // If refreshing or first page, replace data
+        // Otherwise append data
+        if (shouldRefresh || pageToFetch === 0) {
+          setConfessions(newConfessions);
+          setPage(0);
+        } else {
+          setConfessions(prev => [...prev, ...newConfessions]);
+        }
+        
+        console.log(`Fetched ${newConfessions.length} confessions for page ${pageToFetch}`);
+      } else {
+        console.error("Error fetching confessions:", result.message);
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+      setLoadingMore(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchConfessions();
+  }, []);
+
+  // Handle refresh
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setHasMore(true);
+    fetchConfessions(0, true);
+  }, []);
+
+  useEffect(() => {
+    console.log("Refresh timestamp changed:", refreshTimestamp);
+    if (refreshTimestamp) {
+      console.log("Fetching confessions due to timestamp change");
+      fetchConfessions(0, true); // Force refresh from the beginning
+    }
+  }, [refreshTimestamp]);
+
+  // Handle load more
+  const handleLoadMore = useCallback(() => {
+    if (!loadingMore && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchConfessions(nextPage);
+    }
+  }, [loadingMore, hasMore, page]);
+
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color="#E94560" />
+        <Text style={styles.loadingMoreText}>Loading more...</Text>
+      </View>
+    );
   };
 
   const renderConfession = ({ item }) => {
-    const isExpanded = expandedConfessions[item.id];
-    const confessionText = item.text;
-  
+    const confessionText = item.content || "";
+    
     return (
       <View style={styles.card}>
         {item.comments > 10 && (
@@ -49,14 +142,11 @@ const HomeScreen = () => {
           </View>
         )}
         <Text style={styles.confessionText}>
-
-        {/* agar hua toh read more else we will show nothing */}
-        {renderContentWithMentions(
-            isExpanded ? confessionText : `${confessionText.slice(0, 250)}${confessionText.length > 250 ? "..." : ""}`,
+          {renderContentWithMentions(
+            confessionText,
             styles.confessionText,
             styles.mentionText
           )}
-
         </Text>
         <View style={styles.bottomRow}>
           <View style={styles.leftRow}>
@@ -67,17 +157,8 @@ const HomeScreen = () => {
               <Icon name="message-circle" size={16} color="#E94560" />
               <Text style={styles.commentCount}>{item.comments}</Text>
             </TouchableOpacity>
-  
-            {confessionText.length > 250 && (
-              <TouchableOpacity onPress={() => toggleExpand(item.id)}>
-                <Text style={styles.readMoreText}>
-                  {isExpanded ? "Read less" : "Read more..."}
-                </Text>
-              </TouchableOpacity>
-            )}
           </View>
-  
-          <Text style={styles.timeText}>{item.time}</Text>
+          <Text style={styles.timeText}>{item.created_at}</Text>
         </View>
       </View>
     );
@@ -87,16 +168,28 @@ const HomeScreen = () => {
     <SafeAreaView style={styles.container}>
       {/* Title at the top */}
       <Text style={styles.title}>Confessions</Text>
-
-      <FlatList
-        data={confessionsData}
-        keyExtractor={(item) => item.id}
-        renderItem={renderConfession}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      
+      {loading && page === 0 ? (
+        <ActivityIndicator size="large" color="#E94560" />
+      ) : (
+        <FlatList
+          data={confessions}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderConfession}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          onRefresh={handleRefresh}
+          refreshing={refreshing}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={renderFooter}
+          initialNumToRender={5}
+          maxToRenderPerBatch={10}
+          windowSize={10}
+        />
+      )}
       <StatusBar backgroundColor="#000000" barStyle="light-content" />
-
+      
       {/* Comment Section Modal */}
       <CommentSection
         visible={commentsVisible}
@@ -104,7 +197,6 @@ const HomeScreen = () => {
         comments={selectedConfession?.commentsList || []}
         onPostComment={handlePostComment}
       />
-
     </SafeAreaView>
   );
 };
@@ -155,13 +247,6 @@ const styles = StyleSheet.create({
   leftRow: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  readMoreText: {
-    color: "#E94560",
-    fontSize: 14,
-    marginTop: 2,
-    fontWeight: "bold",
-    marginLeft: 8
   },
   mentionText: {
     color: "#E94560"
