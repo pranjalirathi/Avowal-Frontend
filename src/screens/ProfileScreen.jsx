@@ -1,86 +1,120 @@
-import React, { useState, useEffect, useContext } from "react";
-import {
-  SafeAreaView,
-  Text,
-  StyleSheet,
-  Image,
-  ScrollView,
-  View,
-  TouchableOpacity,
-  Dimensions,
-} from "react-native";
+import { useState, useEffect, useContext } from "react";
+import { SafeAreaView, Text, StyleSheet, Image, ScrollView, View, TouchableOpacity, Dimensions, ActivityIndicator } from "react-native";
 import Icon from "react-native-vector-icons/AntDesign";
 import Icon2 from "react-native-vector-icons/MaterialIcons";
 import LogoutModal from "../components/LogoutModal";
 import DeleteModal from "../components/DeleteModal";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigation } from '@react-navigation/native';
+import BASE_URL from "../constants/api";
+
 
 const ProfileScreen = () => {
-
   const navigation = useNavigation();
+  const { logout, userToken } = useContext(AuthContext);
 
-  const email = "pranj@edbuxample.com";
+  const [profileData, setProfileData] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [error, setError] = useState(null);
+
   const [fontSize, setFontSize] = useState(18);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
-  const { logout } = useContext(AuthContext);
-
   const screenWidth = Dimensions.get("window").width - 50;
 
   useEffect(() => {
-    if (email.length > 30) {
+    const fetchProfileData = async () => {
+      try {
+        const response = await fetch("https://avowal-backend.vercel.app/profile_data", {
+          headers: {
+            "Authorization": `Bearer ${userToken}`
+          }
+        });
+        const json = await response.json();
+        if (response.ok) {
+          console.log(json.data);
+          setProfileData(json.data);
+        } else {
+          setError(json.message || "Error fetching profile data.");
+          console.error("Profile fetch error:", json.message);
+        }
+      } catch (error) {
+        setError("Error fetching profile data.");
+        console.error("Error fetching profile:", error);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    fetchProfileData();
+  }, [userToken]);
+
+  useEffect(() => {
+    if (profileData && profileData.email && profileData.email.length > 30) {
       setFontSize(14);
     } else {
       setFontSize(18);
     }
-  }, [email]);
+  }, [profileData]);
 
   const handleLogout = () => {
-    console.log("before logout")
+    console.log("before logout");
     logout();
     setLogoutModalVisible(false);
-    // navigation.navigate("LoginScreen");
-    console.log("after logout")
-  }
+    console.log("after logout");
+  };
 
   const handleDelete = () => {
     console.log("Account deleted");
     setDeleteModalVisible(false);
   };
 
+  if (loadingProfile) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#E94560" />
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Profile</Text>
-
       <ScrollView style={styles.content}>
         {/* Image Container */}
         <View style={styles.imageContainer}>
-          <Image source={require("../../assets/prashu.jpg")} style={styles.profileImage} />
+          <Image
+            source={profileData && profileData.profile_pic ? { uri: `${BASE_URL}/${profileData.profile_pic}` } : require("../../assets/prashu.jpg")}
+            style={styles.profileImage}
+          />
           <View style={styles.overlay} />
           <View style={styles.infoContainer}>
-            <Text style={styles.userName}>Pranjali Rathi, 21</Text>
+            <Text style={[styles.userName, { fontSize }]}>{profileData ? profileData.name : "User Name"}</Text>
             <View style={styles.matchContainer}>
-              <Text style={styles.matchText}>Developer</Text>
+              <Text style={styles.matchText}>{profileData ? profileData.relationship_status : "Status"}</Text>
             </View>
           </View>
         </View>
 
         {/* Details Container */}
         <View style={styles.detailsContainer}>
-
           {/* Separator Line */}
           <View style={styles.separator} />
-
           {/* Menu Options */}
           <View style={styles.menuContainer}>
             <TouchableOpacity style={styles.menuItem}>
               <Icon name="user" size={20} color="#E94560" />
               <View style={styles.menuTextContainer}>
                 <Text style={styles.menuTitle}>Edit Username</Text>
-                <Text style={styles.menuSubtitle}>iprash05</Text>
+                <Text style={styles.menuSubtitle}>{profileData ? profileData.username : ""}</Text>
               </View>
             </TouchableOpacity>
 
@@ -88,31 +122,30 @@ const ProfileScreen = () => {
               <Icon2 name="alternate-email" size={20} color="#E94560" />
               <View style={styles.menuTextContainer}>
                 <Text style={styles.menuTitle}>Email</Text>
-                <Text style={styles.menuSubtitle}>pranjali.2201119ec@iiitbh.ac.in</Text>
+                <Text style={styles.menuSubtitle}>{profileData ? profileData.email : ""}</Text>
               </View>
             </View>
 
             <TouchableOpacity style={styles.menuItem}>
               <Icon name="staro" size={20} color="#E94560" />
               <View style={styles.menuTextContainer}>
-                <Text style={[ styles.menuTitle, styles.editMenu ]}>Edit Relationship Status</Text>
+                <Text style={[styles.menuTitle, styles.editMenu]}>Edit Relationship Status</Text>
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem}>
               <Icon name="picture" size={20} color="#E94560" />
               <View style={styles.menuTextContainer}>
-                <Text style={[ styles.menuTitle, styles.editMenu ]}>Edit Profile Pic</Text>
+                <Text style={[styles.menuTitle, styles.editMenu]}>Edit Profile Pic</Text>
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={() => setDeleteModalVisible(true)}>
               <Icon name="delete" size={20} color="#E94560" />
               <View style={styles.menuTextContainer}>
-                <Text style={[ styles.menuTitle, styles.editMenu ]}>Delete Account</Text>
+                <Text style={[styles.menuTitle, styles.editMenu]}>Delete Account</Text>
               </View>
             </TouchableOpacity>
-
           </View>
 
           {/* Logout Button */}
@@ -122,15 +155,15 @@ const ProfileScreen = () => {
         </View>
 
         <LogoutModal
-        modalVisible={logoutModalVisible}
-        setModalVisible={setLogoutModalVisible}
-        handleLogout={handleLogout}
-      />
+          modalVisible={logoutModalVisible}
+          setModalVisible={setLogoutModalVisible}
+          handleLogout={handleLogout}
+        />
         <DeleteModal
-        modalVisible={deleteModalVisible}
-        setModalVisible={setDeleteModalVisible}
-        handleDelete={handleDelete}
-      />
+          modalVisible={deleteModalVisible}
+          setModalVisible={setDeleteModalVisible}
+          handleDelete={handleDelete}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -142,6 +175,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#121212",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#121212",
+  },
+  errorText: {
+    color: "#E94560",
+    fontSize: 18,
+    padding: 20,
+    textAlign: "center",
   },
   title: {
     fontSize: 24,
@@ -240,16 +285,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 2,
   },
-  
+
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 10,
     // paddingHorizontal: 0,
-    borderBottomWidth: 1,  
+    borderBottomWidth: 1,
     borderBottomColor: "#444",
   },
-  
+
   menuTextContainer: {
     marginLeft: 12,
     flex: 1,
@@ -262,7 +307,7 @@ const styles = StyleSheet.create({
   menuSubtitle: {
     fontSize: 14,
     color: "#aaa",
-  },  
+  },
   editMenu: {
     marginTop: 5,
     marginBottom: 5
