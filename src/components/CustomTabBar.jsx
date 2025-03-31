@@ -30,30 +30,65 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
   };
 
   const postConfession = async (confessionContent) => {
+    const API_URL = "https://avowal-backend.vercel.app/confessions";
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); 
+    
     try {
-      const response = await fetch("https://avowal-backend.vercel.app/confessions", {
+      setErrorMessage("");
+      const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${userToken}`,
         },
         body: JSON.stringify({ content: confessionContent }),
+        signal: controller.signal
       });
-
+      
+      clearTimeout(timeoutId);
+      
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (parseError) {
+        console.error("Error parsing response:", parseError);
+        setErrorMessage("Received invalid response from server");
+        return false;
+      }
+      
       if (response.ok) {
-        const data = await response.json();
-        console.log("Confession posted:", data.message);
-        setErrorMessage(""); 
+        console.log("Confession posted successfully:", responseData.message);
         return true;
       } else {
-        const errorData = await response.json();
-        console.error("Error posting confession:", errorData.detail);
-        setErrorMessage(errorData.detail);
+        const errorMessage = responseData.detail || "Failed to post confession";
+        console.error(`Error ${response.status}: ${errorMessage}`);
+        
+        switch (response.status) {
+          case 400:
+            setErrorMessage(errorMessage);
+            break;
+          case 401:
+            setErrorMessage("Authentication failed. Please log in again.");
+            break;
+          case 500:
+            setErrorMessage("Server error. Your confession couldn't be saved.");
+            break;
+          default:
+            setErrorMessage(errorMessage);
+        }
         return false;
       }
     } catch (error) {
-      console.error("Network error:", error);
-      setErrorMessage("Network error. Please try again.");
+      clearTimeout(timeoutId);
+      
+      if (error.name === 'AbortError') {
+        console.error("Request timed out");
+        setErrorMessage("Request timed out. Please try again.");
+      } else {
+        console.error("Network error:", error);
+        setErrorMessage("Network error. Please check your connection and try again.");
+      }
       return false;
     }
   };
