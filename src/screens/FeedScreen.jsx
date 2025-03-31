@@ -7,20 +7,22 @@ import {
   TextInput,
   StyleSheet,
   Image,
+  TouchableOpacity,
+  Modal,
+  Pressable,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import logo from "../../assets/logo.png";
 
 const data = [
-  { id: "1", name: "John Doe", image: require("../../assets/blueuser.png") },
-  { id: "2", name: "Jane Smith", image: require("../../assets/blueuser.png") },
-  { id: "3", name: "Alice Johnson", image: require("../../assets/blueuser.png") },
-  { id: "4", name: "Bob Brown", image: require("../../assets/blueuser.png") },
+  { id: "1", name: "John Doe", email: "john@example.com", username: "abbc", status: "Single", image: require("../../assets/blueuser.png") },
+  { id: "2", name: "Jane Smith", email: "jane@example.com", username: "abbc", status: "In a Relationship", image: require("../../assets/blueuser.png") },
 ];
 
 const FeedScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState(data);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const handleSearch = (text) => {
     setSearchQuery(text);
@@ -32,7 +34,6 @@ const FeedScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-
       <View style={styles.header}>
         <Image source={logo} style={styles.logo} />
         <Text style={styles.title}>Find Your Avowaler</Text>
@@ -49,20 +50,37 @@ const FeedScreen = () => {
         />
       </View>
 
-      <View style={styles.usersContainer}>
-        <FlatList
-          data={filteredData}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.userItem}>
-              <Image source={item.image} style={styles.avatar} />
-              <Text style={styles.itemText}>{item.name}</Text>
-            </View>
-          )}
-          ListEmptyComponent={<Text style={styles.emptyText}>No results found</Text>}
-        />
-      </View>
+      <FlatList
+        data={filteredData}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => setSelectedUser(item)} style={styles.userItem}>
+            <Image source={item.image} style={styles.avatar} />
+            <Text style={styles.itemText}>{item.name}</Text>
+          </TouchableOpacity>
+        )}
+        ListEmptyComponent={<Text style={styles.emptyText}>No results found</Text>}
+      />
 
+      {/* Modal for User Profile */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={!!selectedUser}
+        onRequestClose={() => setSelectedUser(null)}
+      >
+        <Pressable style={styles.modalContainer} onPress={() => setSelectedUser(null)}>
+          <Pressable style={styles.modalContent}>
+            <View style={styles.profilePicContainer}>
+              <Image source={selectedUser?.image} style={styles.profileImage} />
+            </View>
+            <Text style={styles.modalStatus}>{selectedUser?.status}</Text>
+            <Text style={styles.modalName}>{selectedUser?.name}</Text>
+            <Text style={styles.modalEmail}>{selectedUser?.username}</Text>
+            <Text style={styles.modalEmail}>{selectedUser?.email}</Text>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -82,7 +100,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     marginRight: 3,
-    borderRadius: 25
+    borderRadius: 25,
   },
   title: {
     fontSize: 24,
@@ -110,12 +128,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#fff",
   },
-  usersContainer: {
-    backgroundColor: "#1a1a1a",
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 10,
-  },
   userItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -136,6 +148,57 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
     marginTop: 20,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: 300,
+    backgroundColor: "#1E1E1E",
+    paddingTop: 40,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    position: "relative",
+  },
+  profilePicContainer: {
+    position: "absolute",
+    top: -40,
+    alignItems: "center",
+    backgroundColor: "#1E1E1E",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: "center",
+  },
+  profileImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
+  modalName: {
+    fontSize: 20,
+    color: "#fff",
+    fontWeight: "bold",
+    marginTop: 18,
+  },
+  modalStatus: {
+    fontSize: 12,
+    color: "#E94560",
+    marginTop: 5,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    borderRadius: 35,
+    backgroundColor: "#333",
+  },
+  modalEmail: {
+    fontSize: 16,
+    color: "#ccc",
+    marginTop: 5,
   },
 });
 
