@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, Status
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
+import { ActivityIndicator } from "react-native";
 import { BASE_URL } from '../constants/api'
 
 const { width } = Dimensions.get('window'); 
@@ -14,11 +15,13 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState(null); 
+  const [isLoading, setIsLoading] = useState(false);
   
   const { login } = useContext(AuthContext);
 
   const handleLogin = () => {
     setErrorMessage(null);
+    setIsLoading(true);
     
     const formBody = new URLSearchParams();
     formBody.append('username', email); 
@@ -43,6 +46,9 @@ const LoginScreen = () => {
       })
       .catch((error) => {
         setErrorMessage(error.message);
+      })
+      .finally(() => {
+        setIsLoading(false); 
       });
   };
   
@@ -93,8 +99,16 @@ const LoginScreen = () => {
         {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
 
         {/* Login Button */}
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginText} >Login</Text>
+        <TouchableOpacity 
+          style={[styles.loginButton, isLoading && styles.disabledButton]} 
+          onPress={handleLogin}
+          disabled={isLoading}
+          >
+           {isLoading ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            <Text style={styles.loginText}>Login</Text>
+          )}
         </TouchableOpacity>
 
         {/* Signup Text */}
@@ -198,6 +212,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 10,
     textAlign: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#aaa', 
   },
 });
 
