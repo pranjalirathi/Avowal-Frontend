@@ -1,10 +1,65 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, StatusBar } from 'react-native';
+import React , { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, StatusBar, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
+import { BASE_URL } from '../constants/api';
 
 const { width } = Dimensions.get('window'); 
 
 const ForgotPasswordScreen = ({ navigation }) => {
+
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState(null);
+  const [messageColor, setMessageColor] = useState('#fff');
+  const [loading, setLoading] = useState(false);
+
+  // ----EMAIL VALIDATION----
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleResetPassword = async () => {
+    if (!email.trim()) {
+      setMessage("Please enter your email.");
+      setMessageColor("#D32F2F"); 
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setMessage("Invalid email format.");
+      setMessageColor("#D32F2F"); 
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${BASE_URL}/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log(response);
+        setMessage(data.message);
+        setMessageColor("#4CAF50");
+      } else {
+        console.log("from 39", data.detail)
+        setMessage(data.detail);
+        setMessageColor("#D32F2F"); 
+      }
+    } catch (error) {
+      console.log("error", error)
+      setMessage("Something went wrong. Please try again.");
+      setMessageColor("#E94560");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -12,7 +67,6 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
       <View style={styles.formContainer}>
         <Text style={styles.title}>Forgot Your password</Text>
-        <Text style={styles.subtitle}>Please enter your email.</Text>
 
         {/* Email Input */}
         <View style={styles.passwordContainer}>
@@ -20,15 +74,21 @@ const ForgotPasswordScreen = ({ navigation }) => {
             style={styles.input}
             placeholder="Email"
             placeholderTextColor="#A1A1A1"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
           />
           <TouchableOpacity style={styles.icon}>
             <Icon name="mail" size={20} color="#A1A1A1" />
           </TouchableOpacity>
         </View>
 
+        {message && <Text style={[styles.message, { color: messageColor }]}>{message}</Text>}
+
         {/* Reset Password Button */}
-        <TouchableOpacity style={styles.loginButton}>
-          <Text style={styles.loginText}>Reset Password</Text>
+        <TouchableOpacity style={styles.resetPasswordButton} onPress={handleResetPassword} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.resetText}>Reset Password</Text>}
         </TouchableOpacity>
 
         {/* Signup Text */}
@@ -72,12 +132,18 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 5,
+    paddingBottom: 20,
+    textAlign: "center"
   },
   subtitle: {
     fontSize: 14,
     color: '#A1A1A1',
     marginBottom: 20,
+  },
+  message: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 10,
   },
   input: {
     backgroundColor: '#2A2A2A',
@@ -97,7 +163,7 @@ const styles = StyleSheet.create({
     right: 15,
     top: 15,
   },
-  loginButton: {
+  resetPasswordButton: {
     backgroundColor: '#E94560',
     paddingVertical: 12,
     borderRadius: 8,
@@ -112,7 +178,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     marginBottom: 15,
   },
-  loginText: {
+  resetText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',

@@ -19,7 +19,16 @@ const LoginScreen = () => {
   
   const { login } = useContext(AuthContext);
 
+  const validateInput = () => {
+    if ( !email || !password) {
+      setErrorMessage('Please fill in all fields.');
+      return false;
+    }
+    return true;
+  };
+
   const handleLogin = () => {
+    if (!validateInput()) return;
     setErrorMessage(null);
     setIsLoading(true);
     
