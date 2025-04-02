@@ -11,6 +11,7 @@ import {
 import { useState, useEffect, useContext, useCallback } from "react";
 import Icon from "react-native-vector-icons/Feather";
 import { renderContentWithMentions } from "../helpers/renderContentWithMentions";
+import { formatTimeAgo } from "../helpers/formatTimeAgo";
 import CommentSection from "../components/CommentSection";
 import { AuthContext } from "../context/AuthContext";
 import { ConfessionsContext } from "../context/ConfessionsContext";
@@ -23,7 +24,7 @@ const HomeScreen = () => {
   const [confessions, setConfessions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [commentsVisible, setCommentsVisible] = useState(false);
-  const [selectedConfession, setSelectedConfession] = useState(null);
+  const [selectedConfessionId, setSelectedConfessionId] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -34,7 +35,8 @@ const HomeScreen = () => {
   const { userToken } = useContext(AuthContext);
 
   const handleOpenComments = (confession) => {
-    setSelectedConfession(confession);
+    console.log("Opening comments for Confession ID:", confession.id);
+    setSelectedConfessionId(confession.id);
     setCommentsVisible(true);
   };
 
@@ -131,29 +133,6 @@ const HomeScreen = () => {
     );
   };
 
-  const formatTimeAgo = (timestamp) => {
-    const createdAt = new Date(timestamp);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - createdAt) / 1000);
-
-    if (diffInSeconds < 60) {
-      return `${diffInSeconds} sec ago`;
-    } 
-    else if (diffInSeconds < 3600) {
-      const minutes = Math.floor(diffInSeconds / 60);
-      return `${minutes} min${minutes > 1 ? 's' : ''} ago`;
-    } 
-    else if (diffInSeconds < 86400) {
-      const hours = Math.floor(diffInSeconds / 3600);
-      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    } 
-    else if (diffInSeconds < 172800) {
-      return "Yesterday";
-    } 
-    else {
-      return createdAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-    }
-  };
 
   const renderConfession = ({ item, index }) => {
     const isLastItem = index === confessions.length - 1;
@@ -222,7 +201,7 @@ const HomeScreen = () => {
       <CommentSection
         visible={commentsVisible}
         onClose={() => setCommentsVisible(false)}
-        comments={selectedConfession?.commentsList || []}
+        confession_id={selectedConfessionId} 
         onPostComment={handlePostComment}
       />
     </SafeAreaView>

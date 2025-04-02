@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Modal,
   View,
@@ -9,13 +9,97 @@ import {
   StyleSheet,
   SafeAreaView,
   Keyboard,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  ActivityIndicator,
 } from 'react-native';
+import { formatTimeAgo } from "../helpers/formatTimeAgo";
 import comments from '../constants/commentsData'; 
 import Icon from "react-native-vector-icons/Feather";
+import { AuthContext } from '../context/AuthContext';
+import { BASE_URL } from '../constants/api';
 
-const CommentsModal = ({ visible, onClose }) => {
+const CommentsModal = ({ visible, onClose, confession_id }) => {
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [newComment, setNewComment] = useState('');
+  const [error, setError] = useState(null);
+
+  const { userToken } = useContext(AuthContext);
+
+  useEffect(() => {
+    if (visible && confession_id) {
+      fetchComments();
+    }
+  }, [visible, confession_id]);
+
+
+  // ------API FOR FETCHING COMMENTS-------
+  const fetchComments = async () => {
+
+    if (!confession_id || isNaN(confession_id)) {
+      console.error("Invalid confession_id:", confession_id);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${BASE_URL}/comment/${confession_id}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setComments(data.message);
+      } else {
+        console.error("Failed to fetch comments:", data);
+        setError(data.detail?.[0]?.msg || "Failed to fetch comments.");
+      }
+    } catch (error) {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  // ------API FOR POSING A COMMENT ON A CONFESSION-------
+  const postComment = async () => {
+    if (!newComment.trim()) {
+      setError("Comment cannot be empty.");
+      return;
+    }
+  
+    setError(null);
+    setLoading(true);
+  
+    try {
+      const response = await fetch(`${BASE_URL}/confessions/${confession_id}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${userToken}`,
+        },
+        body: JSON.stringify({ content: newComment.trim() }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        setComments((prevComments) => [
+          { id: data.id, content: data.content, created_at: new Date(), user_id: data.user_id },
+          ...prevComments,
+        ]);
+        setNewComment("");
+      } else {
+        setError(data.detail || "Failed to post comment.");
+      }
+    } catch (error) {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+
 
   const renderItem = ({ item }) => {
     return (
@@ -28,8 +112,9 @@ const CommentsModal = ({ visible, onClose }) => {
         {/* Comment Details */}
         <View style={styles.commentDetails}>
           <View style={styles.commentHeader}>
+            {error && <Text style={styles.errorText}>{error}</Text>}
             <Text style={styles.username}>Avowaler</Text>
-            <Text style={styles.timestamp}>{item.timestamp}</Text>
+            <Text style={styles.timestamp}>{formatTimeAgo(item.created_at)}</Text>
           </View>
           <Text style={styles.commentText}>{item.content}</Text>
         </View>
@@ -57,12 +142,19 @@ const CommentsModal = ({ visible, onClose }) => {
             </View>
 
             {/* Comments List */}
+            {loading ? (
+                <ActivityIndicator size="large" color="#E94560" style={styles.loader} />
+              ) : error ? (
+                <Text style={styles.errorText}>{error}</Text>
+              ) : (
             <FlatList
               data={comments}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => item.id.toString()}
               renderItem={renderItem}
               style={styles.commentsList}
+              ListEmptyComponent={<Text style={styles.noCommentsText}>No comments yet</Text>}
             />
+          )}
 
             {/* Input Section */}
             <SafeAreaView style={styles.inputContainer}>
@@ -73,8 +165,12 @@ const CommentsModal = ({ visible, onClose }) => {
                 value={newComment}
                 onChangeText={setNewComment}
               />
-              <TouchableOpacity style={styles.sendButton}>
+              <TouchableOpacity style={styles.sendButton} onPress={postComment}>
+              {loading ? (
+                <ActivityIndicator size="small" color="#E94560" />
+              ) : (
                 <Icon name="send" style={styles.sendIcon} />
+              )}
               </TouchableOpacity>
             </SafeAreaView>
           </View>
@@ -111,6 +207,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#E0E0E0',
+  },
+  loader: {
+    marginVertical: 20,
+    alignSelf: "center",
+  },
+  noCommentsText: {
+    textAlign: "center",
+    color: "#999",
+    paddingVertical: 20,
   },
   commentsList: {
     paddingHorizontal: 10,
@@ -184,6 +289,12 @@ const styles = StyleSheet.create({
     paddingTop: 2,
     paddingRight: 7
   },
+  errorText: {
+    color: '#D32F2F',
+    textAlign: 'center',
+    marginVertical: 10,
+  },
+  
 });
 
 export default CommentsModal;
