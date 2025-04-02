@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
+import { ActivityIndicator } from "react-native";
 import { BASE_URL } from "../constants/api";
 
 const SignupScreen = ({ navigation }) => {
@@ -9,7 +10,7 @@ const SignupScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null); 
-  const [buttonColor, setButtonColor] = useState("#EF4444");
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateInput = () => {
     if (!username || !email || !password) {
@@ -30,6 +31,7 @@ const SignupScreen = ({ navigation }) => {
 
   const handleSignup = () => {
     if (!validateInput()) return;
+    setIsLoading(true);
     
     fetch(`${BASE_URL}/signup`, {
       method: 'POST',
@@ -49,6 +51,9 @@ const SignupScreen = ({ navigation }) => {
       .catch((error) => {
         console.log(error.message);
         setErrorMessage(error.message);
+      })
+      .finally(() => {
+        setIsLoading(false); 
       });
   };
 
@@ -69,6 +74,8 @@ const SignupScreen = ({ navigation }) => {
             placeholderTextColor="#A1A1A1"
             value={username}
             onChangeText={setUsername}
+            numberOfLines={1} 
+            ellipsizeMode="tail" 
           />
           <TouchableOpacity style={styles.icon}>
             <Icon name="user" size={20} color="#A1A1A1" />
@@ -83,6 +90,8 @@ const SignupScreen = ({ navigation }) => {
             placeholderTextColor="#A1A1A1"
             value={email}
             onChangeText={setEmail}
+            numberOfLines={1} 
+            ellipsizeMode="tail" 
           />
           <TouchableOpacity style={styles.icon}>
             <Icon name="mail" size={20} color="#A1A1A1" />
@@ -98,6 +107,8 @@ const SignupScreen = ({ navigation }) => {
             secureTextEntry={!passwordVisible}
             value={password}
             onChangeText={setPassword}
+            numberOfLines={1} 
+            ellipsizeMode="tail" 
           />
           <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)} style={styles.icon}>
             <Icon name={passwordVisible ? 'eye' : 'eye-off'} size={20} color="#A1A1A1" />
@@ -107,9 +118,16 @@ const SignupScreen = ({ navigation }) => {
         {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
 
         {/* Signup Button */}
-        <TouchableOpacity style={styles.signupButton} onPress={handleSignup} onPressIn={() => setButtonColor("#DC2626")} // Darker red on press
-  onPressOut={() => setButtonColor("#EF4444")}>
-          <Text style={styles.signupText}>Sign Up</Text>
+        <TouchableOpacity 
+          style={[styles.signupButton, isLoading && styles.disabledButton]} 
+          onPress={handleSignup}
+          disabled={isLoading}
+        >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+              <Text style={styles.signupText}>Sign Up</Text>
+              )}
         </TouchableOpacity>
 
         {/* Login Text */}
@@ -168,14 +186,16 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     marginBottom: 15,
     fontSize: 16,
+    paddingRight: 40
   },
   inputContainer: {
     position: 'relative',
+    width: "100%"
   },
   icon: {
     position: 'absolute',
     right: 15,
-    top: 15,
+    top: 12,
   },
   signupButton: {
     backgroundColor: '#E94560',
@@ -200,11 +220,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   errorText: {
-    color: '#E94560',
+    color: '#D32F2F',
     fontSize: 14,
     marginTop: 4,
     mmarginBottom: 10,
     textAlign: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#aaa', 
   },
 });
 

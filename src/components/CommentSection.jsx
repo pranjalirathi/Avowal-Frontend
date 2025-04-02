@@ -23,6 +23,9 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
   const [loading, setLoading] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [error, setError] = useState(null);
+  const [selectedComment, setSelectedComment] = useState(null);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const { userToken } = useContext(AuthContext);
 
@@ -129,7 +132,7 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
 
 
       <View style={styles.modalOverlay}>
-        
+
       <TouchableWithoutFeedback onPress={onClose}>
           <View style={styles.outsideModalArea} />
       </TouchableWithoutFeedback>
@@ -195,6 +198,7 @@ const styles = StyleSheet.create({
     minHeight: 300,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
+    padding: 5
   },
   /* Header */
   headerContainer: {

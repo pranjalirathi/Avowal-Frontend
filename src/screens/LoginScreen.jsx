@@ -27,7 +27,7 @@ const LoginScreen = () => {
     formBody.append('username', email); 
     formBody.append('password', password);
   
-    fetch("https://avowal-backend.vercel.app/login", {
+    fetch(`${BASE_URL}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -69,6 +69,8 @@ const LoginScreen = () => {
             placeholderTextColor="#A1A1A1"
             value={email}
             onChangeText={setEmail}
+            numberOfLines={1} 
+            ellipsizeMode="tail" 
           />
           <TouchableOpacity style={styles.icon}>
             <Icon name="mail" size={20} color="#A1A1A1" />
@@ -85,6 +87,8 @@ const LoginScreen = () => {
             secureTextEntry={!passwordVisible}
             value={password}
             onChangeText={setPassword}
+            numberOfLines={1} 
+            ellipsizeMode="tail" 
           />
           <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)} style={styles.icon}>
             <Icon name={passwordVisible ? 'eye' : 'eye-off'} size={20} color="#A1A1A1" />
@@ -160,22 +164,21 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   input: {
-    backgroundColor: '#2A2A2A',
+    flex: 1, 
     color: '#fff',
     paddingVertical: 12,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    marginBottom: 15,
     fontSize: 16,
-    borderRadius: 30
   },
   passwordContainer: {
-    position: 'relative',
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      backgroundColor: '#2A2A2A',
+      borderRadius: 30,
+      marginBottom: 15,
+      paddingHorizontal: 15,
   },
   icon: {
-    position: 'absolute',
-    right: 15,
-    top: 15,
+    marginLeft: 10
   },
   loginButton: {
     backgroundColor: '#E94560',
@@ -208,7 +211,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   errorText: {
-    color: '#FF4C4C',
+    color: '#D32F2F',
     fontSize: 14,
     marginBottom: 10,
     textAlign: 'center',
@@ -219,5 +222,3 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
-
-// har button mai jab tak network call poora na ho, response naa aaya tab tak activity indicator lagana hai and button ko disable kar do
