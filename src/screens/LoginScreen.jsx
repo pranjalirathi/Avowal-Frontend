@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   disabledButton: {
-    backgroundColor: '#aaa', 
+    opacity: 0.5 
   },
 });
 

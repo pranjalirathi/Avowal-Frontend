@@ -44,16 +44,13 @@ const ForgotPasswordScreen = ({ navigation }) => {
       const data = await response.json();
 
       if (response.ok) {
-        console.log(response);
         setMessage(data.message);
         setMessageColor("#4CAF50");
       } else {
-        console.log("from 39", data.detail)
         setMessage(data.detail);
         setMessageColor("#D32F2F"); 
       }
     } catch (error) {
-      console.log("error", error)
       setMessage("Something went wrong. Please try again.");
       setMessageColor("#E94560");
     } finally {
@@ -78,6 +75,8 @@ const ForgotPasswordScreen = ({ navigation }) => {
             onChangeText={setEmail}
             autoCapitalize="none"
             keyboardType="email-address"
+            numberOfLines={1} 
+            ellipsizeMode="tail" 
           />
           <TouchableOpacity style={styles.icon}>
             <Icon name="mail" size={20} color="#A1A1A1" />
@@ -87,7 +86,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
         {message && <Text style={[styles.message, { color: messageColor }]}>{message}</Text>}
 
         {/* Reset Password Button */}
-        <TouchableOpacity style={styles.resetPasswordButton} onPress={handleResetPassword} disabled={loading}>
+        <TouchableOpacity style={[styles.resetPasswordButton, loading && styles.disabledButton]} onPress={handleResetPassword} disabled={loading}>
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.resetText}>Reset Password</Text>}
         </TouchableOpacity>
 
@@ -143,25 +142,24 @@ const styles = StyleSheet.create({
   message: {
     fontSize: 14,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 2,
   },
   input: {
-    backgroundColor: '#2A2A2A',
+    flex: 1,  
     color: '#fff',
     paddingVertical: 12,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    marginBottom: 15,
     fontSize: 16,
-    borderRadius: 30
   },
   passwordContainer: {
-    position: 'relative',
+    flexDirection: 'row',  
+    alignItems: 'center',  
+    backgroundColor: '#2A2A2A',
+    borderRadius: 30,
+    paddingHorizontal: 15,
+    marginBottom: 15,
   },
   icon: {
-    position: 'absolute',
-    right: 15,
-    top: 15,
+    marginLeft: 10
   },
   resetPasswordButton: {
     backgroundColor: '#E94560',
@@ -193,6 +191,9 @@ const styles = StyleSheet.create({
     color: '#E94560',
     fontWeight: 'bold',
   },
+  disabledButton: {
+    opacity : 0.5
+  }
 });
 
 export default ForgotPasswordScreen;
