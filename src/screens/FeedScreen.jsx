@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useContext } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   SafeAreaView,
   View,
@@ -35,6 +36,14 @@ const FeedScreen = () => {
 
   const { userToken } = useContext(AuthContext);
 
+  useFocusEffect(
+    useCallback(() => {
+      setSearchQuery("");
+      setFilteredData([]);
+      return () => {}; 
+    }, [])
+  );
+  
   const searchUsers = async (query) => {
     if (!query.trim()) {
       setFilteredData([]);
