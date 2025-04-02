@@ -8,6 +8,15 @@ import { ActivityIndicator, View } from 'react-native';
 const AppNavigator = () => {
   const { isLoading, userToken } = useContext(AuthContext);
 
+  const linking = {
+    prefixes: ['avowal://', 'https://avowal-backend.vercel.app'], 
+    config: {
+      screens: {
+        ResetPassword: 'reset-password/:token',
+      },
+    },
+  };
+
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -17,7 +26,7 @@ const AppNavigator = () => {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       {userToken !== null ? <AppStack /> : <AuthStack />}
     </NavigationContainer>
   );

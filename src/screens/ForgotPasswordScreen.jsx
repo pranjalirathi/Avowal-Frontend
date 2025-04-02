@@ -87,7 +87,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
         {/* Reset Password Button */}
         <TouchableOpacity style={[styles.resetPasswordButton, loading && styles.disabledButton]} onPress={handleResetPassword} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.resetText}>Reset Password</Text>}
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.resetText}>Submit</Text>}
         </TouchableOpacity>
 
         {/* Signup Text */}
