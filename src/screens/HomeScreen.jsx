@@ -125,7 +125,7 @@ const HomeScreen = () => {
     
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#E94560" />
+        <ActivityIndicator size="large" color="#E94560" />
         <Text style={styles.loadingMoreText}>Loading more...</Text>
       </View>
     );
@@ -155,11 +155,13 @@ const HomeScreen = () => {
     }
   };
 
-  const renderConfession = ({ item }) => {
+  const renderConfession = ({ item, index }) => {
+    const isLastItem = index === confessions.length - 1;
+
     const confessionText = item.content || "";
     
     return (
-      <View style={styles.card}>
+      <View style={[styles.card, isLastItem && { marginBottom: 70 }]}>
         {item.comments > 10 && (
           <View style={styles.trendingBadge}>
             <Text style={styles.trendingText}>Trending ❤‍🔥</Text>
@@ -194,13 +196,15 @@ const HomeScreen = () => {
       <Text style={styles.title}>Confessions</Text>
       
       {loading && page === 0 ? (
-        <ActivityIndicator size="large" color="#E94560" />
+         <View style={styles.loaderContainer}>
+         <ActivityIndicator size="large" color="#E94560" />
+       </View>
       ) : (
         <FlatList
           data={confessions}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderConfession}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, {paddingBottom: loadingMore || !hasMore ? 100 : 0} ]}
           showsVerticalScrollIndicator={false}
           onRefresh={handleRefresh}
           refreshing={refreshing}
@@ -292,6 +296,21 @@ const styles = StyleSheet.create({
   timeText: {
     color: "#888",
     fontSize: 12,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },  
+  footerLoader: {
+    paddingVertical: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingMoreText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: "#FFFFFF",
   },
 });
 
