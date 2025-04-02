@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   TouchableOpacity,
@@ -22,9 +22,31 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
   const [confession, setConfession] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   const { userToken } = useContext(AuthContext); 
   const { triggerRefresh } = useContext(ConfessionsContext);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
+  
+    return () => {
+      keyboardDidHideListener.remove();
+      keyboardDidShowListener.remove();
+    };
+  }, []);
+  
 
   const handlePlusPress = () => {
     setErrorMessage("");
@@ -169,25 +191,31 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
   };
 
   return (
+    
     <View style={styles.tabBarContainer}>
       {/* Background shape */}
-      <View style={styles.tabBarBackground} />
-
-      <View style={styles.tabWrapper}>
-        <View style={styles.leftContainer}>
-          {leftRoutes.map((route, i) => renderTabItem(route, i))}
+      {!keyboardVisible && (
+      <View style={styles.tabBarBackground} /> )}
+      
+        {!keyboardVisible && (
+        <View style={styles.tabWrapper}>
+          <View style={styles.leftContainer}>
+            {leftRoutes.map((route, i) => renderTabItem(route, i))}
+          </View>
+          <View style={styles.rightContainer}>
+            {rightRoutes.map((route, i) => renderTabItem(route, i))}
+          </View>
         </View>
-        <View style={styles.rightContainer}>
-          {rightRoutes.map((route, i) => renderTabItem(route, i))}
-        </View>
-      </View>
+      )}
 
-      {/* Floating '+' button  */}
-      <View style={styles.plusButtonContainer}>
-        <TouchableOpacity onPress={handlePlusPress} style={styles.plusButton}>
-          <Icon name="add" size={28} color="#fff" />
-        </TouchableOpacity>
-      </View>
+        {/* Floating + Buttoon */}
+        {!keyboardVisible && (
+          <View style={styles.plusButtonContainer}>
+            <TouchableOpacity onPress={handlePlusPress} style={styles.plusButton}>
+              <Icon name="add" size={28} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        )}
 
       {/*  Modal*/}
       <Modal
@@ -259,6 +287,7 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
           </TouchableWithoutFeedback>
         </View>
       </Modal>
+ 
     </View>
   );
 }

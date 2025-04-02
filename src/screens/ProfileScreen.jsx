@@ -1,12 +1,12 @@
 import { useState, useEffect, useContext } from "react";
-import { SafeAreaView, Text, StyleSheet, Image, ScrollView, View, TouchableOpacity, Dimensions, ActivityIndicator } from "react-native";
+import { SafeAreaView, Text, StyleSheet, Image, ScrollView, View, TouchableOpacity, Dimensions, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback} from "react-native";
 import Icon from "react-native-vector-icons/AntDesign";
 import Icon2 from "react-native-vector-icons/MaterialIcons";
 import LogoutModal from "../components/LogoutModal";
 import DeleteModal from "../components/DeleteModal";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigation } from '@react-navigation/native';
-import BASE_URL from "../constants/api";
+import { BASE_URL } from "../constants/api";
 
 
 const ProfileScreen = () => {
@@ -16,6 +16,8 @@ const ProfileScreen = () => {
   const [profileData, setProfileData] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [error, setError] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [username, setUsername] = useState("");
 
   const [fontSize, setFontSize] = useState(18);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
@@ -23,6 +25,7 @@ const ProfileScreen = () => {
 
   const screenWidth = Dimensions.get("window").width - 50;
 
+  // ------API FOR USER PROFILE DATA RENDERING--------
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
@@ -34,7 +37,14 @@ const ProfileScreen = () => {
         const json = await response.json();
         if (response.ok) {
           console.log(json.data);
-          setProfileData(json.data);
+          let imageUrl = json.data.profile_pic;
+          // const imageUrl = `https://avowal-backend.vercel.app/${json.data.profile_pic}`;
+          if (!imageUrl.startsWith("http")) {
+            imageUrl = `${BASE_URL}/${imageUrl}`;
+          }
+
+          console.log("Full Image URL:", imageUrl);
+          setProfileData({ ...json.data, profile_pic: imageUrl });
         } else {
           setError(json.message || "Error fetching profile data.");
           console.error("Profile fetch error:", json.message);
@@ -56,6 +66,95 @@ const ProfileScreen = () => {
       setFontSize(18);
     }
   }, [profileData]);
+
+  //----------- API FOR UPDATING USERNAME------------
+  const handleUsernameChange = async () => {
+  const previousUsername = profileData.username;
+  
+  setProfileData((prevData) => ({
+    ...prevData,
+    username,
+  }));
+
+  try {
+    const queryParams = new URLSearchParams({ username }).toString();
+    const url = `https://avowal-backend.vercel.app/update?${queryParams}`;
+
+    console.log("Sending request to:", url);
+
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+      },
+    });
+
+    const json = await response.json();
+    console.log("Server response:", json);
+
+    if (!response.ok) {
+      // If API fails, revert UI
+      setProfileData((prevData) => ({
+        ...prevData,
+        username: previousUsername,
+      }));
+      setError(json.detail || json.message || "Error updating username.");
+    }
+  } catch (error) {
+    setProfileData((prevData) => ({
+      ...prevData,
+      username: previousUsername,
+    }));
+    setError("Error updating username.");
+    console.error("Update username error:", error);
+  } finally {
+    setIsEditing(false);
+  }
+};
+
+  
+  useEffect(() => {
+  console.log("Profile data changed:", profileData);
+}, [profileData]);
+ 
+
+  // ----------API FOR UPDTAING STATUS-------------
+  const handleStatusChange = async (status) => {
+    setProfileData((prevData) => ({
+      ...prevData,
+      relationship_status: status,
+    }));
+  
+    try {
+      const queryParams = new URLSearchParams({ relationship_status: status }).toString();
+      const url = `https://avowal-backend.vercel.app/update?${queryParams}`;
+  
+      console.log("Sending request to:", url);
+  
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      });
+  
+      const json = await response.json();
+      console.log("Server response:", json);
+  
+      if (!response.ok) {
+        throw new Error(json.detail || json.message || "Error updating status.");
+      }
+    } catch (error) {
+      // If let say the request fails, i will revert back the ui  
+      setProfileData((prevData) => ({
+        ...prevData,
+        relationship_status: prevData.relationship_status, 
+      }));
+      setError("Error updating status.");
+      console.error("Update status error:", error);
+    }
+  };  
+   
 
   const handleLogout = () => {
     console.log("before logout");
@@ -91,13 +190,12 @@ const ProfileScreen = () => {
       <ScrollView style={styles.content}>
         {/* Image Container */}
         <View style={styles.imageContainer}>
-          <Image
-            source={profileData && profileData.profile_pic ? { uri: `${BASE_URL}/${profileData.profile_pic}` } : require("../../assets/prashu.jpg")}
-            style={styles.profileImage}
-          />
+        <Image 
+        source={{ uri: profileData?.profile_pic }} 
+        style={styles.profileImage} />
           <View style={styles.overlay} />
           <View style={styles.infoContainer}>
-            <Text style={[styles.userName, { fontSize }]}>{profileData ? profileData.name : "User Name"}</Text>
+            <Text style={[styles.userName]}>{profileData ? profileData.name : "User Name"}</Text>
             <View style={styles.matchContainer}>
               <Text style={styles.matchText}>{profileData ? profileData.relationship_status : "Status"}</Text>
             </View>
@@ -110,36 +208,62 @@ const ProfileScreen = () => {
           <View style={styles.separator} />
           {/* Menu Options */}
           <View style={styles.menuContainer}>
-            <TouchableOpacity style={styles.menuItem}>
-              <Icon name="user" size={20} color="#E94560" />
-              <View style={styles.menuTextContainer}>
-                <Text style={styles.menuTitle}>Edit Username</Text>
-                <Text style={styles.menuSubtitle}>{profileData ? profileData.username : ""}</Text>
+
+          <View style={styles.menuItem}>
+            <Icon name="user" size={20} color="#E94560" />
+            <View style={styles.menuTextContainer}>
+              {isEditing ? (
+                <TextInput
+                  value={username}
+                  onChangeText={setUsername}
+                  autoFocus
+                  onBlur={handleUsernameChange}
+                  style={styles.input}
+                />
+                ) : (
+                  <Text style={styles.menuSubtitle}>{profileData.username}</Text>
+                )}
               </View>
-            </TouchableOpacity>
+              <TouchableOpacity onPress={() => setIsEditing(true)}>
+                <Icon2 name="edit" size={18} color="#E94560" style={styles.editIcon} />
+              </TouchableOpacity>
+            </View>
 
             <View style={styles.menuItem}>
-              <Icon2 name="alternate-email" size={20} color="#E94560" />
+              <Icon name="mail" size={20} color="#E94560" />
               <View style={styles.menuTextContainer}>
-                <Text style={styles.menuTitle}>Email</Text>
-                <Text style={styles.menuSubtitle}>{profileData ? profileData.email : ""}</Text>
+                <Text style={[styles.menuSubtitle, styles.editMenu]}>{profileData ? profileData.email : ""}</Text>
               </View>
             </View>
 
-            <TouchableOpacity style={styles.menuItem}>
-              <Icon name="staro" size={20} color="#E94560" />
-              <View style={styles.menuTextContainer}>
-                <Text style={[styles.menuTitle, styles.editMenu]}>Edit Relationship Status</Text>
-              </View>
-            </TouchableOpacity>
+          <View style={styles.menuItem}>
+            <Icon name="staro" size={20} color="#E94560" />
+            <View style={styles.menuTextContainer}>
 
+              <View style={styles.badgeContainer}>
+                {["Single", "Committed"].map((status) => (
+                  <TouchableOpacity
+                    key={status}
+                    style={[styles.badge, profileData.relationship_status === status ? styles.selectedBadge : styles.unselectedBadge,
+                    ]}
+                    onPress={() => handleStatusChange(status)}
+                  >
+                    <Text style={styles.badgeText}>{status}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              </View>
+            </View>
+
+            {/* Profile Pic Section */}
             <TouchableOpacity style={styles.menuItem}>
               <Icon name="picture" size={20} color="#E94560" />
               <View style={styles.menuTextContainer}>
-                <Text style={[styles.menuTitle, styles.editMenu]}>Edit Profile Pic</Text>
+                <Text style={[styles.menuTitle, styles.editMenu]}>Change Profile Pic</Text>
               </View>
             </TouchableOpacity>
 
+            {/* Delete Account Section */}
             <TouchableOpacity style={styles.menuItem} onPress={() => setDeleteModalVisible(true)}>
               <Icon name="delete" size={20} color="#E94560" />
               <View style={styles.menuTextContainer}>
@@ -223,7 +347,7 @@ const styles = StyleSheet.create({
   },
   userName: {
     color: "#fff",
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
   },
   matchContainer: {
@@ -241,12 +365,12 @@ const styles = StyleSheet.create({
   },
   detailsContainer: {
     backgroundColor: "#222",
-    padding: 25,
+    padding: 18,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     marginBottom: 80,
     height: "100%",
-    gap: 4
+    gap: 0
   },
   usernameContainer: {
     flexDirection: "row",
@@ -305,7 +429,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   menuSubtitle: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#aaa",
   },
   editMenu: {
@@ -329,4 +453,45 @@ const styles = StyleSheet.create({
     borderWidth: 0.8,
     borderColor: "#E94560",
   },
+  editIcon: {
+    marginLeft: 8,
+    paddingBottom: 2,
+  },
+  relationshipContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: 10,
+    gap: 10,
+  },
+  badge: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+  },
+  selectedBadge: {
+    backgroundColor: "#E94560",
+  },
+  unselectedBadge: {
+    backgroundColor: "#444",
+  },
+  badgeContainer: {
+    flexDirection: "row",
+    gap: 10, // Adjust spacing between badges
+    marginTop: 6,
+  },
+  
+  badgeText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  input: {
+  borderWidth: 1,
+  borderColor: "#444",
+  borderRadius: 8,
+  padding: 8,
+  color: "#fff",
+},
+  
 });
