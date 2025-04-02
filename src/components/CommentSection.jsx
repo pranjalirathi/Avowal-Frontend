@@ -59,7 +59,7 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
       setLoading(false);
     }
   };
-
+  
 
   // ------API FOR POSING A COMMENT ON A CONFESSION-------
   const postComment = async () => {
@@ -84,6 +84,7 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
       const data = await response.json();
   
       if (response.ok) {
+        // Add new comment to the list without fetching again
         setComments((prevComments) => [
           { id: data.id, content: data.content, created_at: new Date(), user_id: data.user_id },
           ...prevComments,
@@ -125,15 +126,13 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       {/* Dark overlay */}
-      <TouchableWithoutFeedback
-          onPress={() => {
-          Keyboard.dismiss();
-          onClose();
-        }}
-      >
+
 
       <View style={styles.modalOverlay}>
-        <TouchableWithoutFeedback>
+        
+      <TouchableWithoutFeedback onPress={onClose}>
+          <View style={styles.outsideModalArea} />
+      </TouchableWithoutFeedback>
           {/* Modal Container */}
           <View style={styles.modalContainer}>
             {/* Header */}
@@ -142,6 +141,7 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
             </View>
 
             {/* Comments List */}
+            <View style={styles.commentsContainer}>
             {loading ? (
                 <ActivityIndicator size="large" color="#E94560" style={styles.loader} />
               ) : error ? (
@@ -152,9 +152,11 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
               keyExtractor={(item) => item.id.toString()}
               renderItem={renderItem}
               style={styles.commentsList}
+              contentContainerStyle={comments.length === 0 ? { flexGrow: 1, justifyContent: 'center' } : null}
               ListEmptyComponent={<Text style={styles.noCommentsText}>No comments yet</Text>}
             />
           )}
+          </View>
 
             {/* Input Section */}
             <SafeAreaView style={styles.inputContainer}>
@@ -165,18 +167,14 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
                 value={newComment}
                 onChangeText={setNewComment}
               />
-              <TouchableOpacity style={styles.sendButton} onPress={postComment}>
-              {loading ? (
-                <ActivityIndicator size="small" color="#E94560" />
-              ) : (
+              <TouchableOpacity style={[styles.sendButton, (!newComment.trim() || loading) && styles.disabledButton]} onPress={postComment} disabled={!newComment.trim()}>
                 <Icon name="send" style={styles.sendIcon} />
-              )}
               </TouchableOpacity>
             </SafeAreaView>
           </View>
-          </TouchableWithoutFeedback>
+          
         </View>
-      </TouchableWithoutFeedback>
+      
     </Modal>
   );
 };
@@ -190,8 +188,11 @@ const styles = StyleSheet.create({
   },
   /* Main container of the modal */
   modalContainer: {
+    // flex: 1,
     backgroundColor: '#1E1E1E',
-    maxHeight: '80%',
+    height: '90%', 
+    maxHeight: 600, 
+    minHeight: 300,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
   },
@@ -270,6 +271,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 10,
     color: '#E0E0E0',
+    // maxHeight: 60
   },
   input: {
     flex: 1,
@@ -293,6 +295,18 @@ const styles = StyleSheet.create({
     color: '#D32F2F',
     textAlign: 'center',
     marginVertical: 10,
+  },
+  disabledButton: {
+    opacity: 0.4, 
+  },  
+  commentsContainer: {
+    flex: 1,
+  },
+  commentsList: {
+    flexGrow: 0,
+  },
+  outsideModalArea: {
+    flex: 1,
   },
   
 });
