@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import { SafeAreaView, Text, StyleSheet, Image, ScrollView, View, TouchableOpacity, Dimensions, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback} from "react-native";
 import Icon from "react-native-vector-icons/AntDesign";
 import Icon2 from "react-native-vector-icons/MaterialIcons";
+import { Snackbar } from "react-native-paper";
 import LogoutModal from "../components/LogoutModal";
 import DeleteModal from "../components/DeleteModal";
 import { AuthContext } from "../context/AuthContext";
@@ -17,6 +18,7 @@ const ProfileScreen = () => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [username, setUsername] = useState("");
 
   const [fontSize, setFontSize] = useState(18);
@@ -46,11 +48,11 @@ const ProfileScreen = () => {
           console.log("Full Image URL:", imageUrl);
           setProfileData({ ...json.data, profile_pic: imageUrl });
         } else {
-          setError(json.message || "Error fetching profile data.");
+          showError(json.message || "Error fetching profile data.");
           console.error("Profile fetch error:", json.message);
         }
       } catch (error) {
-        setError("Error fetching profile data.");
+        showError("Error fetching profile data.");
         console.error("Error fetching profile:", error);
       } finally {
         setLoadingProfile(false);
@@ -58,6 +60,11 @@ const ProfileScreen = () => {
     };
     fetchProfileData();
   }, [userToken]);
+
+  const showError = (message) => {
+    setError(message);
+    setSnackbarVisible(true);
+  };
 
   useEffect(() => {
     if (profileData && profileData.email && profileData.email.length > 30) {
@@ -67,17 +74,28 @@ const ProfileScreen = () => {
     }
   }, [profileData]);
 
+
+
   //----------- API FOR UPDATING USERNAME------------
   const handleUsernameChange = async () => {
+    const trimmedUsername = username.trim();
+
+    if (!trimmedUsername) {
+      setIsEditing(false);
+      return;
+    }
+
   const previousUsername = profileData.username;
   
   setProfileData((prevData) => ({
     ...prevData,
-    username,
+    username: trimmedUsername
   }));
 
+  setUsername(trimmedUsername);
+
   try {
-    const queryParams = new URLSearchParams({ username }).toString();
+    const queryParams = new URLSearchParams({ username: trimmedUsername }).toString();
     const url = `https://avowal-backend.vercel.app/update?${queryParams}`;
 
     console.log("Sending request to:", url);
@@ -94,19 +112,28 @@ const ProfileScreen = () => {
 
     if (!response.ok) {
       // If API fails, revert UI
+      console.log("from usernam", json.detail)
+      showError(json.detail || "Error updating username.");
+
       setProfileData((prevData) => ({
         ...prevData,
         username: previousUsername,
       }));
-      setError(json.detail || json.message || "Error updating username.");
+  
     }
   } catch (error) {
     setProfileData((prevData) => ({
       ...prevData,
       username: previousUsername,
     }));
-    setError("Error updating username.");
+    showError("Error updating username.");
     console.error("Update username error:", error);
+
+    setProfileData((prevData) => ({
+      ...prevData,
+      username: previousUsername,
+    }));
+
   } finally {
     setIsEditing(false);
   }
@@ -120,6 +147,9 @@ const ProfileScreen = () => {
 
   // ----------API FOR UPDTAING STATUS-------------
   const handleStatusChange = async (status) => {
+
+    const previousStatus = profileData.relationship_status;
+
     setProfileData((prevData) => ({
       ...prevData,
       relationship_status: status,
@@ -142,16 +172,21 @@ const ProfileScreen = () => {
       console.log("Server response:", json);
   
       if (!response.ok) {
-        throw new Error(json.detail || json.message || "Error updating status.");
+        showError(json.detail || json.message || "Error updating status.");
+        setProfileData((prevData) => ({
+          ...prevData,
+          relationship_status: previousStatus, 
+        }));
       }
     } catch (error) {
+      showError("Error updating status.");
+      console.error("Update status error:", error);
+
       // If let say the request fails, i will revert back the ui  
       setProfileData((prevData) => ({
         ...prevData,
-        relationship_status: prevData.relationship_status, 
+        relationship_status: previousStatus, 
       }));
-      setError("Error updating status.");
-      console.error("Update status error:", error);
     }
   };  
    
@@ -176,24 +211,20 @@ const ProfileScreen = () => {
     );
   }
 
-  if (error) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
+
       <Text style={styles.title}>Profile</Text>
       <ScrollView style={styles.content}>
+
         {/* Image Container */}
         <View style={styles.imageContainer}>
         <Image 
         source={{ uri: profileData?.profile_pic }} 
         style={styles.profileImage} />
-          <View style={styles.overlay} />
+
+        {snackbarVisible && <View style={styles.overlay} />}
           <View style={styles.infoContainer}>
             <Text style={[styles.userName]}>{profileData ? profileData.name : "User Name"}</Text>
             <View style={styles.matchContainer}>
@@ -209,7 +240,25 @@ const ProfileScreen = () => {
           {/* Menu Options */}
           <View style={styles.menuContainer}>
 
+          {/* Showing ssnackbar  */}
+          <View style={{ flex: 1, justifyContent: "center" }}>
+            <Snackbar
+              style={styles.snackbar}
+              visible={snackbarVisible}
+              onDismiss={() => setSnackbarVisible(false)}
+              duration={4000} 
+              action={{
+                label: "Close",
+                onPress: () => setSnackbarVisible(false),
+              }}
+            >
+              {error || "An error occurred"}
+            </Snackbar>
+          </View>
+
           <View style={styles.menuItem}>
+            
+
             <Icon name="user" size={20} color="#E94560" />
             <View style={styles.menuTextContainer}>
               {isEditing ? (
@@ -224,10 +273,11 @@ const ProfileScreen = () => {
                   <Text style={styles.menuSubtitle}>{profileData.username}</Text>
                 )}
               </View>
-              <TouchableOpacity onPress={() => setIsEditing(true)}>
+              <TouchableOpacity onPress={() =>{setUsername(profileData.username); setIsEditing(true)}}>
                 <Icon2 name="edit" size={18} color="#E94560" style={styles.editIcon} />
               </TouchableOpacity>
             </View>
+
 
             <View style={styles.menuItem}>
               <Icon name="mail" size={20} color="#E94560" />
@@ -289,6 +339,7 @@ const ProfileScreen = () => {
           handleDelete={handleDelete}
         />
       </ScrollView>
+
     </SafeAreaView>
   );
 };
@@ -493,5 +544,12 @@ const styles = StyleSheet.create({
   padding: 8,
   color: "#fff",
 },
+  snackbar: {
+    position: "absolute",
+    top: "50%",
+    alignSelf: "center",
+    transform: [{ translateY: -50 }],
+    width: "90%",
+  },
   
 });
