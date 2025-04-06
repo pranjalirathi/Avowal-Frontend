@@ -15,6 +15,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { AuthContext } from "../context/AuthContext";
 import { ConfessionsContext } from "../context/ConfessionsContext";
 import { BASE_URL } from '../constants/api'
+import { Snackbar } from "react-native-paper";
 import { ActivityIndicator } from "react-native";
 
 export default function CustomTabBar({ state, descriptors, navigation }) {
@@ -23,6 +24,8 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [success, setSuccess] = useState(null);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
 
   const { userToken } = useContext(AuthContext); 
   const { triggerRefresh } = useContext(ConfessionsContext);
@@ -50,7 +53,14 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
 
   const handlePlusPress = () => {
     setErrorMessage("");
+    setConfession("");
     setModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false); 
+    setConfession(""); 
+    setErrorMessage("");
   };
 
   const postConfession = async (confessionContent) => {
@@ -76,17 +86,16 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
       try {
         responseData = await response.json();
       } catch (parseError) {
-        console.error("Error parsing response:", parseError);
         setErrorMessage("Received invalid response from server");
         return false;
       }
       
       if (response.ok) {
+        showSuccess("Confession posted successfully!");
         console.log("Confession posted successfully:", responseData.message);
         return true;
       } else {
         const errorMessage = responseData.detail || "Failed to post confession";
-        console.error(`Error ${response.status}: ${errorMessage}`);
         
         switch (response.status) {
           case 400:
@@ -115,6 +124,16 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
       }
       return false;
     }
+  };
+
+  const showSuccess = (message) => {
+    setSuccess(message);
+    setSnackbarVisible(true);
+    
+    // Auto-hide the snackbar after 4 seconds
+    setTimeout(() => {
+      setSnackbarVisible(false);
+    }, 4000);
   };
 
   const leftRoutes = state.routes.slice(0, 2);   
@@ -178,56 +197,52 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
       setLoading(true); 
       const success = await postConfession(confession);
       if (success) {
-      setModalVisible(false);
-      setConfession("");
-      console.log("triggering refresh")
-      triggerRefresh();
+        setModalVisible(false);
+        setConfession("");
+        console.log("triggering refresh");
+        triggerRefresh();
+      }
+      setLoading(false);
     }
-    setLoading(false);
-  }
     else{
-      console.log("Confesion canot be empty")
+      console.log("Confession cannot be empty");
     }
   };
 
   return (
-    
     <View style={styles.tabBarContainer}>
       {/* Background shape */}
       {!keyboardVisible && (
       <View style={styles.tabBarBackground} /> )}
       
-        {!keyboardVisible && (
-        <View style={styles.tabWrapper}>
-          <View style={styles.leftContainer}>
-            {leftRoutes.map((route, i) => renderTabItem(route, i))}
-          </View>
-          <View style={styles.rightContainer}>
-            {rightRoutes.map((route, i) => renderTabItem(route, i))}
-          </View>
+      {!keyboardVisible && (
+      <View style={styles.tabWrapper}>
+        <View style={styles.leftContainer}>
+          {leftRoutes.map((route, i) => renderTabItem(route, i))}
+        </View>
+        <View style={styles.rightContainer}>
+          {rightRoutes.map((route, i) => renderTabItem(route, i))}
+        </View>
+      </View>
+      )}
+
+      {/* Floating + Button */}
+      {!keyboardVisible && (
+        <View style={styles.plusButtonContainer}>
+          <TouchableOpacity onPress={handlePlusPress} style={styles.plusButton}>
+            <Icon name="add" size={28} color="#fff" />
+          </TouchableOpacity>
         </View>
       )}
 
-        {/* Floating + Buttoon */}
-        {!keyboardVisible && (
-          <View style={styles.plusButtonContainer}>
-            <TouchableOpacity onPress={handlePlusPress} style={styles.plusButton}>
-              <Icon name="add" size={28} color="#fff" />
-            </TouchableOpacity>
-          </View>
-        )}
-
-      {/*  Modal*/}
+      {/* Modal */}
       <Modal
         visible={modalVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => {
-          setModalVisible(false); 
-          setConfession(""); 
-        }}
+        onRequestClose={handleCloseModal}
       >
-        
+        <TouchableWithoutFeedback onPress={handleCloseModal}>
         <View style={styles.modalOverlay}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <KeyboardAvoidingView
@@ -281,13 +296,26 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
               <Text style={styles.anonymousNote}>
                 Your confession will be posted anonymously
               </Text>
-
             </View>
           </KeyboardAvoidingView>
           </TouchableWithoutFeedback>
         </View>
+        </TouchableWithoutFeedback>
       </Modal>
- 
+      
+      {/* Global Snackbar outside of modal */}
+      <Snackbar
+        style={styles.snackbar}
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={4000} 
+        action={{
+          label: "Close",
+          onPress: () => setSnackbarVisible(false),
+        }}
+      >
+        {success}
+      </Snackbar>
     </View>
   );
 }
@@ -436,5 +464,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 10,
   },
+  snackbar: {
+    position: "absolute",
+    bottom: 80,
+    alignSelf: "center",
+    width: "90%",
+    zIndex: 9999,
+    elevation: 10,
+    backgroundColor: "#333"
+  },
 });
-

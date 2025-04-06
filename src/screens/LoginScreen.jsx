@@ -149,6 +149,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 40,
+    fontFamily: 'Poppins-Regular',
   },
   formContainer: {
     width: width * 0.9,

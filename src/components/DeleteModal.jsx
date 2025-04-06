@@ -110,9 +110,11 @@ const styles = StyleSheet.create({
   cancelText: {
     color: "#fff",
     fontSize: 16,
+    fontWeight: "bold",
   },
   deleteText: {
     color: "#fff",
     fontSize: 16,
+    fontWeight: "bold",
   },
 });
