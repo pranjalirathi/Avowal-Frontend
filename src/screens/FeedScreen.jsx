@@ -73,14 +73,20 @@ const FeedScreen = () => {
       const data = await response.json();
 
       if (data && data.data) {
-        const transformedData = data.data.map((user, index) => ({
-          id: user.username || String(index),
-          name: user.fullname || user.username || "No Name",
-          email: user.email || "No Email",
-          username: user.username || "",
-          status: user.status || "No Status",
-          image: require("../../assets/blueuser.png"),
-        }));
+        const transformedData = data.data.map((user, index) => {
+          let imageUrl = user.profile_pic;
+          if (imageUrl && !imageUrl.startsWith("http")) {
+            imageUrl = `${BASE_URL}/${imageUrl}`;
+          }
+          return {
+            id: user.username || String(index),
+            name: user.name || "No Name",
+            email: user.email || "No Email",
+            username: user.username || "",
+            status: user.status || "No Status",
+            image: imageUrl || null
+          }
+      });
 
         setFilteredData(transformedData);
       } else {
@@ -360,12 +366,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: "#fff",
     fontWeight: "bold",
-    marginTop: 18,
+    marginTop: 10,
   },
   modalStatus: {
     fontSize: 12,
     color: "#E94560",
-    marginTop: 5,
+    marginTop: 12,
     paddingVertical: 3,
     paddingHorizontal: 10,
     borderRadius: 35,
