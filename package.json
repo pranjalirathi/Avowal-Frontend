@@ -27,6 +27,7 @@
     "react-native-curved-bottom-bar": "^3.5.0",
     "react-native-dotenv": "^3.4.11",
     "react-native-gesture-handler": "^2.24.0",
+    "react-native-image-picker": "^8.2.0",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-linking": "^0.0.0",
     "react-native-paper": "^5.13.1",
@@ -36,7 +37,8 @@
     "react-native-snackbar": "^2.9.0",
     "react-native-svg": "^15.8.0",
     "react-native-vector-icons": "^10.2.0",
-    "react-native-web": "~0.19.13"
+    "react-native-web": "~0.19.13",
+    "expo-image-picker": "~16.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

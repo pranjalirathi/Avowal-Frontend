@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  TouchableWithoutFeedback,
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 
@@ -18,38 +19,42 @@ const DeleteModal = ({ modalVisible, setModalVisible, handleDelete }) => {
       animationType="slide"
       onRequestClose={() => setModalVisible(false)}
     >
-      <View style={styles.modalOverlay}>
-        <KeyboardAvoidingView
-          style={styles.modalContainer}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-          <View style={styles.modalContent}>
-            <Icon name="alert-triangle" size={50} color="#E94560" />
-            <Text style={styles.modalTitle}>Delete Account</Text>
-            <Text style={styles.modalText}>
-              Are you sure you want to delete your account? This action cannot be undone.
-            </Text>
+      <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView
+            style={styles.modalContainer}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+          >
+            <TouchableWithoutFeedback onPress={() => { }}>
+              <View style={styles.modalContent}>
+                <Icon name="alert-triangle" size={50} color="#E94560" />
+                <Text style={styles.modalTitle}>Delete Account</Text>
+                <Text style={styles.modalText}>
+                  Are you sure you want to delete your account? This action cannot be undone.
+                </Text>
 
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={[styles.button, styles.cancelButton]}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.cancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, styles.deleteButton]}
-                onPress={() => {
-                  handleDelete(); // Call delete function
-                  setModalVisible(false); // Close modal
-                }}
-              >
-                <Text style={styles.deleteText}>Delete</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </View>
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity
+                    style={[styles.button, styles.cancelButton]}
+                    onPress={() => setModalVisible(false)}
+                  >
+                    <Text style={styles.cancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.button, styles.deleteButton]}
+                    onPress={() => {
+                      handleDelete();
+                      setModalVisible(false);
+                    }}
+                  >
+                    <Text style={styles.deleteText}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </KeyboardAvoidingView>
+        </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };

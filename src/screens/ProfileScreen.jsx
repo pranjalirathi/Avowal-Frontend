@@ -3,6 +3,7 @@ import { SafeAreaView, Text, StyleSheet, Image, ScrollView, View, TouchableOpaci
 import Icon from "react-native-vector-icons/AntDesign";
 import Icon2 from "react-native-vector-icons/MaterialIcons";
 import { Snackbar } from "react-native-paper";
+import * as ImagePicker from 'expo-image-picker';
 import LogoutModal from "../components/LogoutModal";
 import DeleteModal from "../components/DeleteModal";
 import { AuthContext } from "../context/AuthContext";
@@ -14,11 +15,20 @@ const ProfileScreen = () => {
   const navigation = useNavigation();
   const { logout, userToken } = useContext(AuthContext);
 
+  useEffect(() => {
+    if (!userToken) {
+      navigation.replace("SignupScreen");
+    }
+  }, [userToken]);
+
   const [profileData, setProfileData] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [username, setUsername] = useState("");
 
   const [fontSize, setFontSize] = useState(18);
@@ -28,19 +38,19 @@ const ProfileScreen = () => {
   const screenWidth = Dimensions.get("window").width - 50;
 
   // ------API FOR USER PROFILE DATA RENDERING--------
-  useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const response = await fetch("https://avowal-backend.vercel.app/profile_data", {
+        const response = await fetch(`${BASE_URL}/profile_data`, {
           headers: {
             "Authorization": `Bearer ${userToken}`
           }
         });
         const json = await response.json();
+        console.log("yaha user token hai " , userToken);
         if (response.ok) {
+          console.log("hmmm");
           console.log(json.data);
           let imageUrl = json.data.profile_pic;
-          // const imageUrl = `https://avowal-backend.vercel.app/${json.data.profile_pic}`;
           if (!imageUrl.startsWith("http")) {
             imageUrl = `${BASE_URL}/${imageUrl}`;
           }
@@ -58,13 +68,23 @@ const ProfileScreen = () => {
         setLoadingProfile(false);
       }
     };
+
+  useEffect(() => {
     fetchProfileData();
   }, [userToken]);
+  
 
   const showError = (message) => {
     setError(message);
     setSnackbarVisible(true);
   };
+
+  const showSuccess = (message) => {
+    setError(null); 
+    setSuccess(message);
+    setSnackbarVisible(true);
+  };
+  
 
   useEffect(() => {
     if (profileData && profileData.email && profileData.email.length > 30) {
@@ -96,7 +116,7 @@ const ProfileScreen = () => {
 
   try {
     const queryParams = new URLSearchParams({ username: trimmedUsername }).toString();
-    const url = `https://avowal-backend.vercel.app/update?${queryParams}`;
+    const url = `${BASE_URL}/update?${queryParams}`;
 
     console.log("Sending request to:", url);
 
@@ -106,6 +126,7 @@ const ProfileScreen = () => {
         Authorization: `Bearer ${userToken}`,
       },
     });
+    showSuccess("Username updated successfully!");
 
     const json = await response.json();
     console.log("Server response:", json);
@@ -133,7 +154,6 @@ const ProfileScreen = () => {
       ...prevData,
       username: previousUsername,
     }));
-
   } finally {
     setIsEditing(false);
   }
@@ -157,7 +177,7 @@ const ProfileScreen = () => {
   
     try {
       const queryParams = new URLSearchParams({ relationship_status: status }).toString();
-      const url = `https://avowal-backend.vercel.app/update?${queryParams}`;
+      const url = `${BASE_URL}/update?${queryParams}`;
   
       console.log("Sending request to:", url);
   
@@ -188,7 +208,70 @@ const ProfileScreen = () => {
         relationship_status: previousStatus, 
       }));
     }
-  };  
+  };
+
+
+  // --------------API FOR CHANGING PROFILE PIC--------------
+  const handleChangeProfilePic = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  
+    if (!permissionResult.granted) {
+      alert("Permission to access media is required!");
+      return;
+    }
+  
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+  
+    if (!result.canceled) {
+      const image = result.assets[0];
+      console.log("Selected Image:", image);
+      uploadImage(image); 
+    }
+  };
+
+  const uploadImage = async (image) => {
+    setUploading(true); 
+    
+    const formData = new FormData();
+    formData.append("file", {
+      uri: image.uri,
+      name: image.fileName || "profile.jpg",
+      type: image.mimeType || "image/jpeg",
+    });
+    
+    try {
+      const response = await fetch(`${BASE_URL}/update_profile_pic`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${userToken}`,
+        },
+        body: formData,
+      });
+      
+      const result = await response.json();
+      console.log("Upload Result:", result);
+      
+      if (response.ok && result.data?.url) {
+        console.log("Updated Profile Pic URL:", result.data.url);
+        await fetchProfileData();
+        showSuccess("Profile picture updated successfully!");
+        console.log(snackbarMessage);
+      } else {
+        showError(result.message || "Failed to update profile picture");
+      }
+    } catch (err) {
+      console.error("Upload failed:", err);
+      showError("Error updating profile picture");
+    } finally {
+      setUploading(false);
+      setSnackbarVisible(true);
+    }
+  };
    
 
   const handleLogout = () => {
@@ -198,11 +281,44 @@ const ProfileScreen = () => {
     console.log("after logout");
   };
 
-  const handleDelete = () => {
-    console.log("Account deleted");
-    setDeleteModalVisible(false);
+  const handleDelete = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/delete_user`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (res.ok) {
+        const data = await res.json(); 
+        showSuccess("Account deleted successfully!");
+        console.log("Account deleted:", data.message);
+        await logout();
+  
+        setTimeout(() => {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "SignupScreen" }],
+          });
+        }, 300);
+      } else {
+        const errorText = await res.text();
+        let message = "Failed to delete account.";
+        try {
+          const json = JSON.parse(errorText);
+          message = json.message || message;
+        } catch (e) {
+          message = errorText;
+        }
+        showError(message);
+        }
+    } catch (err) {
+      showError("Network error. Please try again later.");
+    }
   };
-
+  
   if (loadingProfile) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
@@ -220,17 +336,25 @@ const ProfileScreen = () => {
 
         {/* Image Container */}
         <View style={styles.imageContainer}>
-        <Image 
-        source={{ uri: profileData?.profile_pic }} 
-        style={styles.profileImage} />
+          <Image 
+          source={{ uri: profileData?.profile_pic }} 
+          style={styles.profileImage} />
 
-        {snackbarVisible && <View style={styles.overlay} />}
-          <View style={styles.infoContainer}>
-            <Text style={[styles.userName]}>{profileData ? profileData.name : "User Name"}</Text>
-            <View style={styles.matchContainer}>
-              <Text style={styles.matchText}>{profileData ? profileData.relationship_status : "Status"}</Text>
+          <View style={styles.permanentOverlay} />
+
+          {uploading && (
+              <View style={styles.spinnerOverlay}>
+                <ActivityIndicator size="large" color="#E94560" />
+              </View>
+            )}
+
+          {snackbarVisible && <View style={styles.overlay} />}
+            <View style={styles.infoContainer}>
+              <Text style={[styles.userName]}>{profileData ? profileData.name : "User Name"}</Text>
+              <View style={styles.matchContainer}>
+                <Text style={styles.matchText}>{profileData ? profileData.relationship_status : "Status"}</Text>
+              </View>
             </View>
-          </View>
         </View>
 
         {/* Details Container */}
@@ -252,7 +376,7 @@ const ProfileScreen = () => {
                 onPress: () => setSnackbarVisible(false),
               }}
             >
-              {error || "An error occurred"}
+              {error || success}
             </Snackbar>
           </View>
 
@@ -306,15 +430,17 @@ const ProfileScreen = () => {
             </View>
 
             {/* Profile Pic Section */}
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity style={styles.menuItem} onPress={handleChangeProfilePic}>
               <Icon name="picture" size={20} color="#E94560" />
               <View style={styles.menuTextContainer}>
-                <Text style={[styles.menuTitle, styles.editMenu]}>Change Profile Pic</Text>
+                <Text style={[styles.menuTitle, styles.editMenu, { color: uploading ? "#aaa" : "#fff" }]}>
+                  {uploading ? "Uploading..." : "Change Profile Pic"}
+                </Text>
               </View>
             </TouchableOpacity>
 
             {/* Delete Account Section */}
-            <TouchableOpacity style={styles.menuItem} onPress={() => setDeleteModalVisible(true)}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => setDeleteModalVisible(true)} disabled={loadingProfile}>
               <Icon name="delete" size={20} color="#E94560" />
               <View style={styles.menuTextContainer}>
                 <Text style={[styles.menuTitle, styles.editMenu]}>Delete Account</Text>
@@ -395,6 +521,7 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: "center",
     top: "48%",
+    zIndex: 2
   },
   userName: {
     color: "#fff",
@@ -417,9 +544,11 @@ const styles = StyleSheet.create({
   detailsContainer: {
     backgroundColor: "#222",
     padding: 18,
+    top: 0,
+    zIndex: 4,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
-    marginBottom: 80,
+    marginBottom: 90,
     height: "100%",
     gap: 0
   },
@@ -449,11 +578,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     flexShrink: 1,
   },
-  // separator: {
-  //   height: 1,
-  //   backgroundColor: "#444",
-  //   marginVertical: 2,
-  // },
   menuContainer: {
     marginVertical: 0,
     backgroundColor: "#222",
@@ -528,7 +652,7 @@ const styles = StyleSheet.create({
   },
   badgeContainer: {
     flexDirection: "row",
-    gap: 10, // Adjust spacing between badges
+    gap: 10, 
     marginTop: 6,
   },
   
@@ -549,7 +673,26 @@ const styles = StyleSheet.create({
     top: "50%",
     alignSelf: "center",
     transform: [{ translateY: -50 }],
-    width: "90%",
+    width: "100%",
+    zIndex: 9999,
+    elevation: 10,
+    backgroundColor: "#333"
   },
-  
+  spinnerOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    color: "#E94560",
+    backgroundColor: "rgba(0, 0, 0, 0.4)", 
+    zIndex: 10,
+  },
+  permanentOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)", 
+    zIndex: 1, 
+  },
 });
