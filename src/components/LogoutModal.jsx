@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  TouchableWithoutFeedback
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 
@@ -18,38 +19,42 @@ const LogoutModal = ({ modalVisible, setModalVisible, handleLogout }) => {
       animationType="slide"
       onRequestClose={() => setModalVisible(false)}
     >
-      <View style={styles.modalOverlay}>
-        <KeyboardAvoidingView
-          style={styles.modalContainer}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-          <View style={styles.modalContent}>
-            <View style={styles.headerRow}>
-              <Icon name="log-out" size={20} color="#E94560" />
-              <Text style={styles.headerTitle}>Logout</Text>
-            </View>
-            <View style={styles.separator} />
-            <Text style={styles.message}>Are you sure you want to logout?</Text>
+      <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView
+            style={styles.modalContainer}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+          >
+            <TouchableWithoutFeedback onPress={() => { }}>
+            <View style={styles.modalContent}>
+              <View style={styles.headerRow}>
+                <Icon name="log-out" size={20} color="#E94560" />
+                <Text style={styles.headerTitle}>Logout</Text>
+              </View>
+              <View style={styles.separator} />
+              <Text style={styles.message}>Are you sure you want to logout?</Text>
 
-            {/* Buttons */}
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.buttonText}>Cancel</Text>
-              </TouchableOpacity>
+              {/* Buttons */}
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={styles.buttonText}>Cancel</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.logoutButton}
-                onPress={handleLogout}
-              >
-                <Text style={styles.buttonText}>Logout</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.logoutButton}
+                  onPress={handleLogout}
+                >
+                  <Text style={styles.buttonText}>Logout</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        </KeyboardAvoidingView>
-      </View>
+            </TouchableWithoutFeedback>
+          </KeyboardAvoidingView>
+        </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };

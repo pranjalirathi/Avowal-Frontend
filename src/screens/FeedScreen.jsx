@@ -16,6 +16,7 @@ import {
 import Icon from "react-native-vector-icons/Ionicons";
 import { AuthContext } from "../context/AuthContext";
 import logo from "../../assets/logo.png";
+import { BASE_URL } from "../constants/api";
 
 const debounce = (func, delay) => {
   let timer;
@@ -55,7 +56,7 @@ const FeedScreen = () => {
 
     try {
       const response = await fetch(
-        `https://avowal-backend.vercel.app/search_users?q=${encodeURIComponent(query)}`,
+        `${BASE_URL}/search_users?q=${encodeURIComponent(query)}`,
         {
           method: "GET",
           headers: {
@@ -110,7 +111,7 @@ const FeedScreen = () => {
 
     try {
       const response = await fetch(
-        `https://avowal-backend.vercel.app/user?username=${encodeURIComponent(username)}`,
+        `${BASE_URL}/user?username=${encodeURIComponent(username)}`,
         {
           method: "GET",
           headers: {

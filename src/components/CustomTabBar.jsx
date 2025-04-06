@@ -54,7 +54,7 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
   };
 
   const postConfession = async (confessionContent) => {
-    const API_URL = "https://avowal-backend.vercel.app/confessions";
+    const API_URL = `${BASE_URL}/confessions`;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000); 
     
