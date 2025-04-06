@@ -6,7 +6,8 @@ import {
   StyleSheet,
   Dimensions,
   StatusBar,
-  TouchableOpacity
+  TouchableOpacity,
+  Image
 } from "react-native";
 import { useState, useEffect, useContext, useCallback } from "react";
 import Icon from "react-native-vector-icons/Feather";
@@ -16,6 +17,7 @@ import CommentSection from "../components/CommentSection";
 import { AuthContext } from "../context/AuthContext";
 import { ConfessionsContext } from "../context/ConfessionsContext";
 import { BASE_URL } from "../constants/api";
+import logo from "../../assets/avowal.png";
 import { ActivityIndicator } from "react-native";
 
 const { width } = Dimensions.get("window");
@@ -171,8 +173,11 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Title at the top */}
-      <Text style={styles.title}>Confessions</Text>
+      {/* Header with logo and title latest */}
+      <View style={styles.header}>
+        <Image source={logo} style={styles.logo} />
+        <Text style={styles.title}>Confessions</Text>
+      </View>
       
       {loading && page === 0 ? (
          <View style={styles.loaderContainer}>
@@ -214,13 +219,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#121212",
     paddingHorizontal: 16,
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  logo: {
+    width: 30,
+    height: 30,
+    marginRight: 3,
+    borderRadius: 25,
+  },
   title: {
     fontSize: 24,
     color: "#E94560",
     fontWeight: "bold",
     marginVertical: 16,
-    marginTop: 12,
-    marginBottom: 10,
+    marginTop: 8,
+    marginBottom: 5,
     padding: 10
   },
   listContent: {

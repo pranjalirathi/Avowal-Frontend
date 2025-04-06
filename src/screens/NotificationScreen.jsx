@@ -5,13 +5,18 @@ import {
   Text,
   StyleSheet,
   Dimensions,
+  Image
 } from "react-native";
+import logo from "../../assets/avowal.png";
 
 const ComingSoonScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
     
-      <Text style={styles.title}>Notifications </Text>
+      <View style={styles.header}>
+        <Image source={logo} style={styles.logo} />
+        <Text style={styles.title}>Notifications</Text>
+      </View>
 
       <View style={styles.content}>
         <Text style={styles.comingSoonText}>COMING SOON</Text>
@@ -32,14 +37,25 @@ const styles = StyleSheet.create({
     backgroundColor: "#121212",
     paddingHorizontal: 16,
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  logo: {
+    width: 30,
+    height: 30,
+    marginRight: 3,
+    borderRadius: 25,
+  },
   title: {
     fontSize: 24,
     color: "#E94560",
     fontWeight: "bold",
     marginVertical: 16,
-    marginTop: 12,
-    marginBottom: 10,
-    padding: 10,
+    marginTop: 8,
+    marginBottom: 5,
+    padding: 10
   },
   content: {
     flex: 1,

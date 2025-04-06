@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { AuthContext } from "../context/AuthContext";
-import logo from "../../assets/logo.png";
+import logo from "../../assets/avowal.png";
 import { BASE_URL } from "../constants/api";
 
 const debounce = (func, delay) => {
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 8,
   },
   logo: {
     width: 30,
@@ -273,9 +273,9 @@ const styles = StyleSheet.create({
     color: "#E94560",
     fontWeight: "bold",
     marginVertical: 16,
-    marginTop: 12,
-    marginBottom: 10,
-    padding: 10,
+    marginTop: 8,
+    marginBottom: 5,
+    padding: 10
   },
   searchContainer: {
     flexDirection: "row",

@@ -9,6 +9,7 @@ import DeleteModal from "../components/DeleteModal";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigation } from '@react-navigation/native';
 import { BASE_URL } from "../constants/api";
+import logo from "../../assets/avowal.png";
 
 
 const ProfileScreen = () => {
@@ -331,7 +332,10 @@ const ProfileScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
 
-      <Text style={styles.title}>Profile</Text>
+      <View style={styles.header}>
+        <Image source={logo} style={styles.logo} />
+        <Text style={styles.title}>Profile</Text>
+      </View>
       <ScrollView style={styles.content}>
 
         {/* Image Container */}
@@ -477,6 +481,27 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#121212",
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    paddingHorizontal: 16
+  },
+  logo: {
+    width: 30,
+    height: 30,
+    marginRight: 3,
+    borderRadius: 25,
+  },
+  title: {
+    fontSize: 24,
+    color: "#E94560",
+    fontWeight: "bold",
+    marginVertical: 16,
+    marginTop: 8,
+    marginBottom: 5,
+    padding: 10
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
@@ -488,15 +513,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     padding: 20,
     textAlign: "center",
-  },
-  title: {
-    fontSize: 24,
-    color: "#E94560",
-    fontWeight: "bold",
-    marginTop: 12,
-    marginLeft: 14,
-    marginBottom: 10,
-    padding: 10,
   },
   content: {},
   imageContainer: {
