@@ -13,7 +13,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { formatTimeAgo } from "../helpers/formatTimeAgo";
-import comments from '../constants/commentsData'; 
 import Icon from "react-native-vector-icons/Feather";
 import { AuthContext } from '../context/AuthContext';
 import { BASE_URL } from '../constants/api';
