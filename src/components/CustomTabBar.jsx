@@ -136,10 +136,8 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
       clearTimeout(timeoutId);
       
       if (error.name === 'AbortError') {
-        console.error("Request timed out");
         setErrorMessage("Request timed out. Please try again.");
       } else {
-        console.error("Network error:", error);
         setErrorMessage("Network error. Please check your connection and try again.");
       }
       setLoading(false);
@@ -220,13 +218,12 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
       if (success) {
         setModalVisible(false);
         setConfession("");
-        console.log("triggering refresh");
         triggerRefresh();
       }
       setLoading(false);
     }
     else{
-      console.log("Confession cannot be empty");
+      showSuccess("Confession cannot be empty!");
     }
   };
 

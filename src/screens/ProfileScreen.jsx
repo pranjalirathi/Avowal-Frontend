@@ -47,24 +47,18 @@ const ProfileScreen = () => {
           }
         });
         const json = await response.json();
-        console.log("yaha user token hai " , userToken);
         if (response.ok) {
-          console.log("hmmm");
-          console.log(json.data);
           let imageUrl = json.data.profile_pic;
           if (!imageUrl.startsWith("http")) {
             imageUrl = `${BASE_URL}/${imageUrl}`;
           }
 
-          console.log("Full Image URL:", imageUrl);
           setProfileData({ ...json.data, profile_pic: imageUrl });
         } else {
           showError(json.message || "Error fetching profile data.");
-          console.error("Profile fetch error:", json.message);
         }
       } catch (error) {
         showError("Error fetching profile data.");
-        console.error("Error fetching profile:", error);
       } finally {
         setLoadingProfile(false);
       }
@@ -119,7 +113,6 @@ const ProfileScreen = () => {
     const queryParams = new URLSearchParams({ username: trimmedUsername }).toString();
     const url = `${BASE_URL}/update?${queryParams}`;
 
-    console.log("Sending request to:", url);
 
     const response = await fetch(url, {
       method: "PUT",
@@ -130,11 +123,9 @@ const ProfileScreen = () => {
     showSuccess("Username updated successfully!");
 
     const json = await response.json();
-    console.log("Server response:", json);
 
     if (!response.ok) {
       // If API fails, revert UI
-      console.log("from usernam", json.detail)
       showError(json.detail || "Error updating username.");
 
       setProfileData((prevData) => ({
@@ -149,7 +140,6 @@ const ProfileScreen = () => {
       username: previousUsername,
     }));
     showError("Error updating username.");
-    console.error("Update username error:", error);
 
     setProfileData((prevData) => ({
       ...prevData,
@@ -159,11 +149,6 @@ const ProfileScreen = () => {
     setIsEditing(false);
   }
 };
-
-  
-  useEffect(() => {
-  console.log("Profile data changed:", profileData);
-}, [profileData]);
  
 
   // ----------API FOR UPDTAING STATUS-------------
@@ -180,8 +165,6 @@ const ProfileScreen = () => {
       const queryParams = new URLSearchParams({ relationship_status: status }).toString();
       const url = `${BASE_URL}/update?${queryParams}`;
   
-      console.log("Sending request to:", url);
-  
       const response = await fetch(url, {
         method: "PUT",
         headers: {
@@ -190,7 +173,6 @@ const ProfileScreen = () => {
       });
   
       const json = await response.json();
-      console.log("Server response:", json);
   
       if (!response.ok) {
         showError(json.detail || json.message || "Error updating status.");
@@ -201,7 +183,6 @@ const ProfileScreen = () => {
       }
     } catch (error) {
       showError("Error updating status.");
-      console.error("Update status error:", error);
 
       // If let say the request fails, i will revert back the ui  
       setProfileData((prevData) => ({
@@ -230,7 +211,6 @@ const ProfileScreen = () => {
   
     if (!result.canceled) {
       const image = result.assets[0];
-      console.log("Selected Image:", image);
       uploadImage(image); 
     }
   };
@@ -255,18 +235,14 @@ const ProfileScreen = () => {
       });
       
       const result = await response.json();
-      console.log("Upload Result:", result);
       
       if (response.ok && result.data?.url) {
-        console.log("Updated Profile Pic URL:", result.data.url);
         await fetchProfileData();
         showSuccess("Profile picture updated successfully!");
-        console.log(snackbarMessage);
       } else {
         showError(result.message || "Failed to update profile picture");
       }
     } catch (err) {
-      console.error("Upload failed:", err);
       showError("Error updating profile picture");
     } finally {
       setUploading(false);
@@ -276,10 +252,8 @@ const ProfileScreen = () => {
    
 
   const handleLogout = () => {
-    console.log("before logout");
     logout();
     setLogoutModalVisible(false);
-    console.log("after logout");
   };
 
   const handleDelete = async () => {
@@ -295,7 +269,6 @@ const ProfileScreen = () => {
       if (res.ok) {
         const data = await res.json(); 
         showSuccess("Account deleted successfully!");
-        console.log("Account deleted:", data.message);
         await logout();
   
         setTimeout(() => {

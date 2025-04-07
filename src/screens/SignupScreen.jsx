@@ -39,7 +39,6 @@ const SignupScreen = ({ navigation }) => {
       body: JSON.stringify({ username, email, password }),
     })
       .then(async (response) => {
-        console.log(response); 
         const data = await response.json(); 
 
         if (!response.ok) {
@@ -49,7 +48,6 @@ const SignupScreen = ({ navigation }) => {
         navigation.navigate("LoginScreen");
       })
       .catch((error) => {
-        console.log(error.message);
         setErrorMessage(error.message);
       })
       .finally(() => {

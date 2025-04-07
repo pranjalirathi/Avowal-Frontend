@@ -39,7 +39,7 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
   const fetchComments = async () => {
 
     if (!confession_id || isNaN(confession_id)) {
-      console.error("Invalid confession_id:", confession_id);
+      setError("Invalid confession_id:", confession_id);
       return;
     }
 
@@ -50,9 +50,8 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
       const data = await response.json();
 
       if (response.ok) {
-        setComments(data.message);
+        setComments(data.message.reverse());
       } else {
-        console.error("Failed to fetch comments:", data);
         setError(data.detail?.[0]?.msg || "Failed to fetch comments.");
       }
     } catch (error) {

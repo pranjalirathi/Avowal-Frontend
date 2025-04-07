@@ -93,7 +93,6 @@ const FeedScreen = () => {
         setFilteredData([]);
       }
     } catch (err) {
-      console.error("Search API error:", err);
       setError("Failed to search users. Please try again.");
       setFilteredData([]);
     } finally {
@@ -132,10 +131,8 @@ const FeedScreen = () => {
       }
 
       const data = await response.json();
-      console.log(data.data)
       setUserDetails(data.data); 
     } catch (err) {
-      console.error("Profile fetch error:", err);
       setUserDetails(null);
     } finally {
       setIsProfileLoading(false);

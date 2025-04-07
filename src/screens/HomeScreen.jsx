@@ -43,13 +43,11 @@ const HomeScreen = () => {
   }, []);
 
   const handleOpenComments = (confession) => {
-    console.log("Opening comments for Confession ID:", confession.id);
     setSelectedConfessionId(confession.id);
     setCommentsVisible(true);
   };
 
   const handlePostComment = (text) => {
-    console.log("New Comment:", text);
   };
 
    useEffect(() => {
@@ -121,14 +119,12 @@ const HomeScreen = () => {
         
         console.log(`Fetched ${newConfessions.length} confessions for page ${pageToFetch}`);
       } else {
-        // console.error("Error fetching confessions:", result.message);
         setError({
           message: result.message || "Failed to load confessions",
           statusCode: response.status
         });
       }
     } catch (error) {
-      console.error("Network error:", error);
       setError({
         message: "Network error. Please check your connection and try again.",
         statusCode: 0
