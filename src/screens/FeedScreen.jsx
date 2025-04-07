@@ -107,7 +107,7 @@ const FeedScreen = () => {
   const handleSearch = (text) => {
     const lowerCaseQuery = text.toLowerCase();
     setSearchQuery(lowerCaseQuery);
-    debouncedSearch(lowerCaseQuery);
+    debouncedSearch(text.trim().toLowerCase());
   };
 
   const fetchUserProfile = async (username) => {
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   errorText: {
-    color: "#E94560",
+    color: "#D32F2F",
     textAlign: "center",
     marginTop: 10,
   },
