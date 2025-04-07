@@ -89,7 +89,7 @@ const SignupScreen = ({ navigation }) => {
             placeholder="Email"
             placeholderTextColor="#A1A1A1"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(text) => setEmail(text.trim().toLowerCase())}
             numberOfLines={1} 
             ellipsizeMode="tail" 
           />

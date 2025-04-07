@@ -75,9 +75,6 @@
 
 //       <View style={styles.formContainer}>
 //         <Text style={styles.title}>Reset Your password</Text>
-
-
-
 //         <>
 //           <TextInput
 //             style={styles.input}
@@ -248,6 +245,12 @@
 // });
 
 // export default ResetPasswordScreen;
+// bas upar voh mai add ho gaya
+// maan lo ek baar render kar lia , html mai add karna hai, array mai add nahi karna hai
+// maan lo 2 ghnate mai user scroll kar raha hai, har 20 sec mai api call ho rahi hau
+// broswer cache mai user specific 
+// browser acche tab hota hai for slow net
+// kya: kcuh bhi naya aaga na
 
 
 import React, { useState, useEffect } from "react";
