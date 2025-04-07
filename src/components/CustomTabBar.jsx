@@ -28,7 +28,8 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
   const [snackbarVisible, setSnackbarVisible] = useState(false);
 
   const { userToken } = useContext(AuthContext); 
-  const { triggerRefresh } = useContext(ConfessionsContext);
+  const { addNewConfession } = useContext(ConfessionsContext);
+
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -70,6 +71,7 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
     
     try {
       setErrorMessage("");
+      setLoading(true);
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {
@@ -87,12 +89,29 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
         responseData = await response.json();
       } catch (parseError) {
         setErrorMessage("Received invalid response from server");
+        setLoading(false);
         return false;
       }
       
       if (response.ok) {
         showSuccess("Confession posted successfully!");
-        console.log("Confession posted successfully:", responseData.message);
+        if (responseData.data) {
+          // If server returns the created confession
+          addNewConfession(responseData.data);
+        } else {
+          // If server doesn't return the complete data, create a placeholder
+          const newConfession = {
+            id: Date.now().toString(), // am adding emporary ID until refresh
+            content: confessionContent,
+            created_at: new Date().toISOString(),
+            comments: 0,
+          };
+          addNewConfession(newConfession);
+        }
+        
+        setModalVisible(false);
+        setConfession("");
+        setLoading(false);
         return true;
       } else {
         const errorMessage = responseData.detail || "Failed to post confession";
@@ -110,6 +129,7 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
           default:
             setErrorMessage(errorMessage);
         }
+        setLoading(false);
         return false;
       }
     } catch (error) {
@@ -122,6 +142,7 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
         console.error("Network error:", error);
         setErrorMessage("Network error. Please check your connection and try again.");
       }
+      setLoading(false);
       return false;
     }
   };

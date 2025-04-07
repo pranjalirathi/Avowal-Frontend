@@ -3,14 +3,19 @@ import React, { createContext, useState, useCallback } from 'react';
 export const ConfessionsContext = createContext();
 
 export const ConfessionsProvider = ({ children }) => {
-  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
-  
-  const triggerRefresh = useCallback(() => {
-    setRefreshTimestamp(Date.now()); 
+  const [newConfessions, setNewConfessions] = useState([]);
+
+  const addNewConfession = useCallback((confession) => {
+    setNewConfessions(prev => [confession, ...prev]);
   }, []);
+
+  const clearNewConfessions = useCallback(() => {
+    setNewConfessions([]);
+  }, []);
+
   
   return (
-    <ConfessionsContext.Provider value={{ refreshTimestamp, triggerRefresh }}>
+    <ConfessionsContext.Provider value={{ newConfessions, addNewConfession, clearNewConfessions}}>
       {children}
     </ConfessionsContext.Provider>
   );

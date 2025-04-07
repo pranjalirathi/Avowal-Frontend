@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   Image
 } from "react-native";
-import { useState, useEffect, useContext, useCallback } from "react";
+import { useState, useEffect, useContext, useCallback , useRef} from "react";
 import Icon from "react-native-vector-icons/Feather";
 import { renderContentWithMentions } from "../helpers/renderContentWithMentions";
 import { formatTimeAgo } from "../helpers/formatTimeAgo";
@@ -31,10 +31,15 @@ const HomeScreen = () => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const { refreshTimestamp } = useContext(ConfessionsContext);
+  const { newConfessions, clearNewConfessions } = useContext(ConfessionsContext);
+  const flatListRef = useRef(null);
 
   const LIMIT=10;
   const { userToken } = useContext(AuthContext);
+
+  useEffect(() => {
+    fetchConfessions();
+  }, []);
 
   const handleOpenComments = (confession) => {
     console.log("Opening comments for Confession ID:", confession.id);
@@ -45,6 +50,35 @@ const HomeScreen = () => {
   const handlePostComment = (text) => {
     console.log("New Comment:", text);
   };
+
+   useEffect(() => {
+    if (newConfessions.length > 0) {
+      //will merge the new fetched with the previous
+      setConfessions(prevConfessions => {
+        const existingIds = new Set(prevConfessions.map(c => c.id));
+        const uniqueNewConfessions = newConfessions.filter(c => !existingIds.has(c.id));
+        
+        // id at top, then we will add new confessions to the top of the list
+        if (uniqueNewConfessions.length > 0) {
+          const updatedConfessions = [...uniqueNewConfessions, ...prevConfessions];
+          
+          // Scroll to top to show new confessions if needed
+          setTimeout(() => {
+            if (flatListRef.current) {
+              flatListRef.current.scrollToOffset({ offset: 0, animated: true });
+            }
+          }, 100);
+          
+          return updatedConfessions;
+        }
+        
+        return prevConfessions;
+      });
+      
+      // clear context after merging
+      clearNewConfessions();
+    }
+  }, [newConfessions, clearNewConfessions]);
 
   const fetchConfessions = async (pageToFetch = 0, shouldRefresh = false) => {
     // Don't fetch if we're already at the end and it's not a refresh
@@ -106,14 +140,6 @@ const HomeScreen = () => {
     setHasMore(true);
     fetchConfessions(0, true);
   }, []);
-
-  useEffect(() => {
-    console.log("Refresh timestamp changed:", refreshTimestamp);
-    if (refreshTimestamp) {
-      console.log("Fetching confessions due to timestamp change");
-      fetchConfessions(0, true); // Force refresh from the beginning
-    }
-  }, [refreshTimestamp]);
 
   // Handle load more
   const handleLoadMore = useCallback(() => {
@@ -185,6 +211,7 @@ const HomeScreen = () => {
        </View>
       ) : (
         <FlatList
+          ref={flatListRef}
           data={confessions}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderConfession}
