@@ -32,6 +32,7 @@ const HomeScreen = () => {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const { newConfessions, clearNewConfessions } = useContext(ConfessionsContext);
+  const [error, setError] = useState(null);
   const flatListRef = useRef(null);
 
   const LIMIT=10;
@@ -89,6 +90,8 @@ const HomeScreen = () => {
     } else {
       setLoadingMore(true);
     }
+
+    setError(null);
     
     try {
       const skip = pageToFetch * LIMIT;
@@ -118,21 +121,24 @@ const HomeScreen = () => {
         
         console.log(`Fetched ${newConfessions.length} confessions for page ${pageToFetch}`);
       } else {
-        console.error("Error fetching confessions:", result.message);
+        // console.error("Error fetching confessions:", result.message);
+        setError({
+          message: result.message || "Failed to load confessions",
+          statusCode: response.status
+        });
       }
     } catch (error) {
       console.error("Network error:", error);
+      setError({
+        message: "Network error. Please check your connection and try again.",
+        statusCode: 0
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
       setLoadingMore(false);
     }
   };
-
-  // Initial load
-  useEffect(() => {
-    fetchConfessions();
-  }, []);
 
   // Handle refresh
   const handleRefresh = useCallback(() => {
@@ -143,12 +149,12 @@ const HomeScreen = () => {
 
   // Handle load more
   const handleLoadMore = useCallback(() => {
-    if (!loadingMore && hasMore) {
+    if (!loadingMore && hasMore && !error) {
       const nextPage = page + 1;
       setPage(nextPage);
       fetchConfessions(nextPage);
     }
-  }, [loadingMore, hasMore, page]);
+  }, [loadingMore, hasMore, page, error]);
 
   const renderFooter = () => {
     if (!loadingMore) return null;
@@ -157,6 +163,22 @@ const HomeScreen = () => {
       <View style={styles.footerLoader}>
         <ActivityIndicator size="large" color="#E94560" />
         <Text style={styles.loadingMoreText}>Loading more...</Text>
+      </View>
+    );
+  };
+
+  const renderErrorState = () => {
+    return (
+      <View style={styles.errorContainer}>
+        <Icon name="alert-circle" size={50} color="#E94560" />
+        <Text style={styles.errorTitle}>Failed to load confessions</Text>
+        <Text style={styles.errorMessage}>{"Something went wrong"}</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={() => fetchConfessions(0, true)}
+        >
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
       </View>
     );
   };
@@ -209,13 +231,15 @@ const HomeScreen = () => {
          <View style={styles.loaderContainer}>
          <ActivityIndicator size="large" color="#E94560" />
        </View>
+       ) : error && confessions.length === 0 ? (
+        renderErrorState()
       ) : (
         <FlatList
           ref={flatListRef}
           data={confessions}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderConfession}
-          contentContainerStyle={[styles.listContent, {paddingBottom: loadingMore || !hasMore ? 100 : 0} ]}
+          contentContainerStyle={[styles.listContent, {paddingBottom: loadingMore || !hasMore ? 100 : 0}, confessions.length ===0 && { flex: 1, justifyContent: 'center'} ]}
           showsVerticalScrollIndicator={false}
           onRefresh={handleRefresh}
           refreshing={refreshing}
@@ -333,6 +357,46 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 14,
     color: "#FFFFFF",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  errorTitle: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  errorMessage: {
+    color: "#CCCCCC",
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: "#E94560",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  emptyText: {
+    color: "#CCCCCC",
+    fontSize: 16,
   },
 });
 
