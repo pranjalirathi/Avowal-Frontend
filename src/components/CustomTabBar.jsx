@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import {
   View,
   TouchableOpacity,
@@ -9,7 +9,9 @@ import {
   Platform,
   TextInput, 
   TouchableWithoutFeedback,
-  Keyboard
+  Keyboard,
+  ScrollView,
+  Image
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { AuthContext } from "../context/AuthContext";
@@ -26,10 +28,14 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [success, setSuccess] = useState(null);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [mentionSuggestions, setMentionSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [cursorPosition, setCursorPosition] = useState({ start: 0, end: 0 });
+  const textInputRef = useRef(null);
 
   const { userToken } = useContext(AuthContext); 
   const { addNewConfession } = useContext(ConfessionsContext);
-
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -51,10 +57,20 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
     };
   }, []);
   
+  useEffect(() => {
+    if (!modalVisible) {
+      setMentionSuggestions([]);
+      setShowSuggestions(false);
+      setMentionQuery("");
+    }
+  }, [modalVisible]);
 
   const handlePlusPress = () => {
     setErrorMessage("");
     setConfession("");
+    setMentionSuggestions([]);
+    setShowSuggestions(false);
+    setMentionQuery("");
     setModalVisible(true);
   };
 
@@ -62,6 +78,9 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
     setModalVisible(false); 
     setConfession(""); 
     setErrorMessage("");
+    setMentionSuggestions([]);
+    setShowSuggestions(false);
+    setMentionQuery("");
   };
 
   const postConfession = async (confessionContent) => {
@@ -101,7 +120,7 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
         } else {
           // If server doesn't return the complete data, create a placeholder
           const newConfession = {
-            id: Date.now().toString(), // am adding emporary ID until refresh
+            id: Date.now().toString(), // temporary ID until refresh
             content: confessionContent,
             created_at: new Date().toISOString(),
             comments: 0,
@@ -155,6 +174,68 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
     }, 4000);
   };
 
+  const handleSelectionChange = (event) => {
+    setCursorPosition(event.nativeEvent.selection);
+  };
+
+  const handleConfessionChange = async (text) => {
+    setConfession(text);
+  
+    const mentionRegex = /@(\w*)$/;
+    const match = text.slice(0, cursorPosition.start || text.length).match(mentionRegex);
+  
+    if (match) {
+      const query = match[1];
+      setMentionQuery(query);
+      setShowSuggestions(true);
+      fetchSuggestions(query);
+    } else {
+      setShowSuggestions(false);
+      setMentionQuery("");
+    }
+  };
+
+  const fetchSuggestions = async (query) => {
+    try {
+      const res = await fetch(`${BASE_URL}/search_users?q=${query}`, {
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      });
+      const data = await res.json();
+      setMentionSuggestions(data.data);
+    } catch (error) {
+      console.error("Error fetching mentions", error);
+    }
+  };
+
+  const handleSelectMention = (username) => {
+    const beforeCursor = confession.slice(0, cursorPosition.start);
+    const afterCursor = confession.slice(cursorPosition.end);
+    
+    const updatedBeforeCursor = beforeCursor.replace(/@(\w*)$/, `@${username} `);
+    const updatedText = updatedBeforeCursor + afterCursor;
+    
+    setConfession(updatedText);
+    setShowSuggestions(false);
+    
+    const newPosition = updatedBeforeCursor.length;
+    
+    setTimeout(() => {
+      if (textInputRef.current) {
+        textInputRef.current.focus();
+        textInputRef.current.setNativeProps({
+          selection: { start: newPosition, end: newPosition }
+        });
+      }
+    }, 10);
+  };
+
+  const getProfileImageUrl = (profile_pic) => {
+    if (!profile_pic) return null;
+    return profile_pic.includes('http') ? profile_pic : `${BASE_URL}/${profile_pic}`;
+  };
+  
   const leftRoutes = state.routes.slice(0, 2);   
   const rightRoutes = state.routes.slice(2);    
 
@@ -209,7 +290,7 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
   };
 
   const charCount = confession.length;
-  const MAX_CHAR = 350;
+  const MAX_CHAR = 200;
 
   const handlePostConfession = async () => {
     if(confession.trim().length > 0){
@@ -218,7 +299,9 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
       if (success) {
         setModalVisible(false);
         setConfession("");
-        triggerRefresh();
+        if (typeof triggerRefresh === 'function') {
+          triggerRefresh();
+        }
       }
       setLoading(false);
     }
@@ -277,16 +360,41 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
               {/* Text Input for the Confession */}
               <View style={styles.textInputContainer}>
                 <TextInput
+                  ref={textInputRef}
                   style={styles.textInput}
                   placeholder="What's in your heart? Type your confession here..."
                   placeholderTextColor="#aaa"
                   multiline
                   maxLength={MAX_CHAR}
                   value={confession}
-                  onChangeText={(text) => {
-                    setConfession(text);
-                  }}
+                  onChangeText={handleConfessionChange}
+                  onSelectionChange={handleSelectionChange}
                 />
+                {showSuggestions && mentionSuggestions.length > 0 && (
+                  <View style={styles.suggestionBox}>
+                    <ScrollView 
+                      style={styles.suggestionScroll}
+                      keyboardShouldPersistTaps="handled"
+                    >
+                      {mentionSuggestions.map((user, idx) => (
+                        <TouchableOpacity
+                          key={idx}
+                          onPress={() => handleSelectMention(user.username)}
+                          style={styles.suggestionItem}
+                        >
+                          {user.profile_pic && (
+                            <Image 
+                              source={{ uri: getProfileImageUrl(user.profile_pic) }}
+                              style={styles.profileImage}
+                              // defaultSource={require('../assets/default-avatar.png')} // Add a default image in your assets
+                            />
+                          )}
+                          <Text style={styles.usernameText}>@{user.username}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
               </View>
 
               {/* Character Count */}
@@ -445,12 +553,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderWidth: 1,
     borderColor: "#E94560",
+    position: "relative",
   },
   textInput: {
     height: 80,
     textAlignVertical: "top", 
     color: "#E0E0E0",
     paddingBottom: 0,
+    paddingHorizontal: 8,
   },
   charCount: {
     fontSize: 12,
@@ -491,4 +601,44 @@ const styles = StyleSheet.create({
     elevation: 10,
     backgroundColor: "#333"
   },
+  suggestionBox: {
+    position: "absolute",
+    top: 80, // position right below the text input
+    left: 0,
+    right: 0,
+    backgroundColor: "#1E1E1E",
+    borderWidth: 1,
+    borderColor: "#333",
+    borderRadius: 5,
+    zIndex: 1000,
+    maxHeight: 150,
+    width: "95%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  suggestionScroll: {
+    maxHeight: 150,
+  },
+  suggestionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#333",
+  },
+  profileImage: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    marginRight: 10,
+    backgroundColor: "#333" // placeholder color while loading
+  },
+  usernameText: {
+    color: "#E0E0E0",
+    fontSize: 14,
+  }
 });

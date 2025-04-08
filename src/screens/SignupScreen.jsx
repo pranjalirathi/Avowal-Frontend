@@ -71,7 +71,10 @@ const SignupScreen = ({ navigation }) => {
             placeholder="Username"
             placeholderTextColor="#A1A1A1"
             value={username}
-            onChangeText={setUsername}
+            onChangeText={(text) => {
+              const formatted = text.replace(/ /g, '_').slice(0, 25);
+              setUsername(formatted);
+           }}
             numberOfLines={1} 
             ellipsizeMode="tail" 
           />

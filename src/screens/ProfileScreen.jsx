@@ -365,7 +365,10 @@ const ProfileScreen = () => {
               {isEditing ? (
                 <TextInput
                   value={username}
-                  onChangeText={setUsername}
+                  onChangeText={(text) => {
+                    const formatted = text.replace(/ /g, '_').slice(0, 25);
+                    setUsername(formatted);
+                  }}
                   autoFocus
                   onBlur={handleUsernameChange}
                   style={styles.input}

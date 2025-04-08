@@ -31,6 +31,7 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
   useEffect(() => {
     if (visible && confession_id) {
       fetchComments();
+      setNewComment('');
     }
   }, [visible, confession_id]);
 

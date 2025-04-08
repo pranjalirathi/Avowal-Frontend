@@ -204,9 +204,10 @@ const HomeScreen = () => {
             <TouchableOpacity
               style={styles.iconRow}
               onPress={() => handleOpenComments(item)}
+              hitSlop={{ top: 25, bottom: 25, left: 25, right: 25 }}
             >
-              <Icon name="message-circle" size={16} color="#E94560" />
-              <Text style={styles.commentCount}>{item.comments}</Text>
+              <Icon name="message-circle" size={18} color="#E94560" />
+              {/* <Text style={styles.commentCount}>{item.comments}</Text> */}
             </TouchableOpacity>
           </View>
           <Text style={styles.timeText}>{formatTimeAgo(item.created_at)}</Text>
@@ -233,7 +234,13 @@ const HomeScreen = () => {
         <FlatList
           ref={flatListRef}
           data={confessions}
-          keyExtractor={(item) => item.id.toString()}
+          // keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+          keyExtractor={(item, index) => {
+            if (item && item.id !== null && item.id !== undefined) {
+              return `confession-${item.id}`;
+            }
+            return `confession-index-${index}-${item.created_at || Date.now()}`;
+          }}
           renderItem={renderConfession}
           contentContainerStyle={[styles.listContent, {paddingBottom: loadingMore || !hasMore ? 100 : 0}, confessions.length ===0 && { flex: 1, justifyContent: 'center'} ]}
           showsVerticalScrollIndicator={false}

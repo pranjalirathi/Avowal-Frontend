@@ -19,13 +19,19 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/avowal.png",
         "backgroundColor": "#121212"
-      }
+      },
+      "package": "com.iprash05.Avowal"
     },
     "web": {
       "favicon": "./assets/avowal.png"
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "32b30df1-4d17-4d02-a062-a62fd10a74e2"
+      }
+    }
   }
 }
