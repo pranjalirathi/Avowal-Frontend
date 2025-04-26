@@ -8,7 +8,7 @@ import LogoutModal from "../components/LogoutModal";
 import DeleteModal from "../components/DeleteModal";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigation } from '@react-navigation/native';
-import { BASE_URL } from "../constants/api";
+import BASE_URL from "../constants/api";
 import logo from "../../assets/avowal.png";
 
 

@@ -16,7 +16,7 @@ import {
 import Icon from "react-native-vector-icons/Ionicons";
 import { AuthContext } from "../context/AuthContext";
 import { ConfessionsContext } from "../context/ConfessionsContext";
-import { BASE_URL } from '../constants/api'
+import BASE_URL from '../constants/api'
 import { Snackbar } from "react-native-paper";
 import { ActivityIndicator } from "react-native";
 
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   textInputContainer: {
     backgroundColor: "rgba(26, 26, 26, 1)",
     borderRadius: 8,
-    padding: 1,
+    padding: 6,
     marginBottom: 10,
     borderWidth: 1,
     borderColor: "#E94560",
@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
     textAlignVertical: "top", 
     color: "#E0E0E0",
     paddingBottom: 0,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
   },
   charCount: {
     fontSize: 12,

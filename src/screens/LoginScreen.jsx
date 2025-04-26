@@ -4,13 +4,13 @@ import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
 import { ActivityIndicator } from "react-native";
-import { BASE_URL } from '../constants/api'
+import BASE_URL from '../constants/api'
 
 const { width } = Dimensions.get('window'); 
 
 const LoginScreen = () => {
   const navigation = useNavigation();
-
+  
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -142,14 +142,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     width: 'auto',
-    height: 'auto'
+    height: 'auto',
   },
   logo: {
     fontSize: 32, 
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 40,
-    fontFamily: 'Poppins-Regular',
   },
   formContainer: {
     width: width * 0.9,

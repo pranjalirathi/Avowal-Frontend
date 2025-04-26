@@ -263,7 +263,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
-import { BASE_URL } from "../constants/api"
+import BASE_URL from "../constants/api"
 const ResetPasswordScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();

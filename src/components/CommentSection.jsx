@@ -15,7 +15,7 @@ import {
 import { formatTimeAgo } from "../helpers/formatTimeAgo";
 import Icon from "react-native-vector-icons/Feather";
 import { AuthContext } from '../context/AuthContext';
-import { BASE_URL } from '../constants/api';
+import BASE_URL from '../constants/api';
 
 const CommentsModal = ({ visible, onClose, confession_id }) => {
   const [comments, setComments] = useState([]);

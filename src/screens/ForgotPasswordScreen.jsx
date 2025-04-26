@@ -1,7 +1,7 @@
 import React , { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, StatusBar, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import { BASE_URL } from '../constants/api';
+import BASE_URL from '../constants/api';
 
 const { width } = Dimensions.get('window'); 
 

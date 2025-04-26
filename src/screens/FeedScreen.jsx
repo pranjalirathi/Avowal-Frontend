@@ -16,7 +16,7 @@ import {
 import Icon from "react-native-vector-icons/Ionicons";
 import { AuthContext } from "../context/AuthContext";
 import logo from "../../assets/avowal.png";
-import { BASE_URL } from "../constants/api";
+import BASE_URL from "../constants/api";
 
 const debounce = (func, delay) => {
   let timer;

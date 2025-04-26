@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { ActivityIndicator } from "react-native";
-import { BASE_URL } from "../constants/api";
+import BASE_URL from "../constants/api";
 
 const SignupScreen = ({ navigation }) => {
   const [username, setUsername] = useState('');

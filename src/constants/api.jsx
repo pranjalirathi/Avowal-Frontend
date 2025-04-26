@@ -1,1 +1,2 @@
-export const BASE_URL = "https://avowal-backend.vercel.app";
+import { BASE_URL } from '@env';
+export default BASE_URL;

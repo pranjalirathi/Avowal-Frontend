@@ -16,7 +16,7 @@ import { formatTimeAgo } from "../helpers/formatTimeAgo";
 import CommentSection from "../components/CommentSection";
 import { AuthContext } from "../context/AuthContext";
 import { ConfessionsContext } from "../context/ConfessionsContext";
-import { BASE_URL } from "../constants/api";
+import BASE_URL from "../constants/api";
 import logo from "../../assets/avowal.png";
 import { ActivityIndicator } from "react-native";
 
