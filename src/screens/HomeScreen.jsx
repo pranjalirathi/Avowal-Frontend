@@ -241,6 +241,16 @@ const HomeScreen = () => {
             }
             return `confession-index-${index}-${item.created_at || Date.now()}`;
           }}
+
+          // if two children later-----
+          // keyExtractor={(item, index) => {
+          //   if (item && item.id !== null && item.id !== undefined) {
+          //     return `confession-${item.id}`;
+          //   }
+          //   return `confession-index-${index}-${item.created_at || Date.now()}`;
+          // }}
+          // -------------
+          
           renderItem={renderConfession}
           contentContainerStyle={[styles.listContent, {paddingBottom: loadingMore || !hasMore ? 100 : 0}, confessions.length ===0 && { flex: 1, justifyContent: 'center'} ]}
           showsVerticalScrollIndicator={false}
