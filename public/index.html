@@ -3,13 +3,93 @@
 <head>
   <meta charset="UTF-8">
   <title>Download Avowal APK</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #E94560; 
+      height: 100vh;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    h1 {
+      font-size: 3em;
+      margin-bottom: 0.3em;
+      animation: fadeInDown 1s ease forwards;
+      color: white;
+    }
+
+    p {
+      font-size: 1.2em;
+      animation: fadeInUp 1.5s ease forwards;
+    }
+
+    a.download-btn {
+      display: inline-block;
+      padding: 15px 35px;
+      margin-top: 25px;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: white;
+      background: black;
+      border-radius: 50px;
+      text-decoration: none;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+      animation: pulse 2s infinite;
+    }
+
+    a.download-btn:hover {
+      transform: scale(1.07);
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.6);
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+      }
+      50% {
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+      }
+      100% {
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+      }
+    }
+  </style>
 </head>
 <body>
-  <h1>Avowal Android App</h1>
-  <p>
-    <a href="/avowal2.0.apk" download>
-      📱 Click here to download the APK
-    </a>
-  </p>
+  <h1>🚀 Avowal App is Here!</h1>
+  <p>Tap the button below to download the latest Android APK:</p>
+  <a href="/avowal2.0.apk" class="download-btn" download>📱 Download APK</a>
 </body>
 </html>
+
