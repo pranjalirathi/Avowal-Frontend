@@ -18,6 +18,7 @@ const LoginScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   const { login } = useContext(AuthContext);
+  // setContext(AuthContext) pulls whatever is in the context (value={{...}}) defined by the provider
 
   const validateInput = () => {
     if ( !email || !password) {

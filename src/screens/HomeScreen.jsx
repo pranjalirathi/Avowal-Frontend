@@ -36,7 +36,7 @@ const HomeScreen = () => {
   const flatListRef = useRef(null);
 
   const LIMIT=10;
-  const { userToken } = useContext(AuthContext);
+  const { userToken , logout } = useContext(AuthContext);
 
   useEffect(() => {
     fetchConfessions();
@@ -99,6 +99,11 @@ const HomeScreen = () => {
         },
       });
       const result = await response.json();
+
+      if(response.status === 401){
+        logout();
+        return;
+      }
       
       if (response.ok) {
         const newConfessions = result.data;

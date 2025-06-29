@@ -35,7 +35,7 @@ const FeedScreen = () => {
   const [userDetails, setUserDetails] = useState(null); 
   const [isProfileLoading, setIsProfileLoading] = useState(false);
 
-  const { userToken } = useContext(AuthContext);
+  const { userToken, logout } = useContext(AuthContext);
 
   useFocusEffect(
     useCallback(() => {
@@ -65,6 +65,11 @@ const FeedScreen = () => {
           },
         }
       );
+
+      if(response.status === 401){
+        logout();
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

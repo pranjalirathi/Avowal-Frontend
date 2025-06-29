@@ -47,6 +47,12 @@ const ProfileScreen = () => {
           }
         });
         const json = await response.json();
+
+        if(response.status === 401) {
+          logout();
+          return;
+          }
+
         if (response.ok) {
           let imageUrl = json.data.profile_pic;
           if (!imageUrl.startsWith("http")) {
