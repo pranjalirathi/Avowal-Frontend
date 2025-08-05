@@ -17,7 +17,8 @@ AVOWAL is a modern anonymous confession app built with React Native that allows 
 
 ## 💻 Technologies Used
 
-<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/react/react-original-wordmark.svg" alt="React logo" height="30px"> <img src="https://www.svgrepo.com/show/303206/javascript-logo.svg" alt="javscript" height="30px">
+
+<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/react/react-original-wordmark.svg" alt="React logo" height="30px"> <img src="https://www.svgrepo.com/show/303206/javascript-logo.svg" alt="JavaScript" height="30px"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="Python" height="30px"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/fastapi/fastapi-original.svg" alt="FastAPI" height="30px"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/sqlalchemy/sqlalchemy-original.svg" alt="SQLAlchemy" height="30px"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/postgresql/postgresql-original.svg" alt="PostgreSQL" height="30px"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/supabase/supabase-original.svg" alt="Supabase" height="30px">
 
 ## 🛠️ Tech Stack
 
@@ -34,7 +35,7 @@ AVOWAL is a modern anonymous confession app built with React Native that allows 
 **Backend & Database:**
 - FastAPI (Python web framework)
 - SQLAlchemy (SQL toolkit and ORM)
-- PostgreSQL/SQLite (database)
+- PostgreSQL (database)
 - Pydantic (data validation)
 - JWT Authentication
 - Alembic (database migrations)
