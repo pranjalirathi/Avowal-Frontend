@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
 import AuthStack from './AuthStack';
 import AppStack from './AppStack';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, StatusBar } from 'react-native';
 import { jwtDecode } from 'jwt-decode';
 
 const AppNavigator = () => {
@@ -48,17 +48,16 @@ const AppNavigator = () => {
   }
 
   return (
-    <NavigationContainer linking={linking}>
-      {userToken !== null ? (
-        <>
-          <AppStack />
-        </>
-      ) : (
-        <>
-          <AuthStack />
-        </>
-      )}
-    </NavigationContainer>
+    <>
+      <StatusBar 
+        backgroundColor="#000000" 
+        barStyle="light-content" 
+        translucent={false}
+      />
+      <NavigationContainer linking={linking}>
+        {userToken !== null ? <AppStack /> : <AuthStack />}
+      </NavigationContainer>
+    </>
   );
 };
 
