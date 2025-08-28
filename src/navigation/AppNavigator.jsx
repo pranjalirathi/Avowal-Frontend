@@ -4,7 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import AuthStack from './AuthStack';
 import AppStack from './AppStack';
 import { ActivityIndicator, View } from 'react-native';
-import jwtDecode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
 const AppNavigator = () => {
   const { isLoading, userToken, logout} = useContext(AuthContext);
@@ -20,11 +20,13 @@ const AppNavigator = () => {
   };
 
   useEffect(() => {
+    
     if (userToken) {
       try {
-        const decoded = jwtDecode(userToken);
+        const decoded = jwtDecode(userToken);        
         const isExpired = decoded.exp < Date.now() / 1000;
-        setIsTokenValid(!isExpired);
+
+        setIsTokenValid(!isExpired);        
         if (isExpired) {
           logout();
         }
@@ -47,7 +49,15 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer linking={linking}>
-      {userToken !== null ? <AppStack /> : <AuthStack />}
+      {userToken !== null ? (
+        <>
+          <AppStack />
+        </>
+      ) : (
+        <>
+          <AuthStack />
+        </>
+      )}
     </NavigationContainer>
   );
 };
