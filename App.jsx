@@ -1,18 +1,21 @@
+// App.jsx - Fixed version
 import React from 'react';
-import { AuthProvider } from './src/context/AuthContext';
-import AppNavigator from './src/navigation/AppNavigator';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { AuthProvider } from './src/context/AuthContext';
 import { ConfessionsProvider } from './src/context/ConfessionsContext';
+import AppNavigator from './src/navigation/AppNavigator';
 
 const App = () => {
+  console.log('📱 App component rendered');
+
   return (
-    <ConfessionsProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <AppNavigator />
+        <ConfessionsProvider>
+          <AppNavigator />
+        </ConfessionsProvider>
       </AuthProvider>
-    </GestureHandlerRootView>
-    </ConfessionsProvider>
+    </GestureHandlerRootView>    
   );
 };
 

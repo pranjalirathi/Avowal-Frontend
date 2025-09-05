@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/avowal.png",
     "userInterfaceStyle": "light",
+    "scheme": "avowal",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/avowal.png",
@@ -13,7 +14,8 @@
       "backgroundColor": "#121212"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.iprash05.Avowal"
     },
     "android": {
       "adaptiveIcon": {
@@ -26,7 +28,8 @@
       "favicon": "./assets/avowal.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {
