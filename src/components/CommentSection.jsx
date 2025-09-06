@@ -11,7 +11,8 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   ActivityIndicator,
-  ScrollView
+  ScrollView,
+  Image // Added Image import
 } from 'react-native';
 import { formatTimeAgo } from "../helpers/formatTimeAgo";
 import Icon from "react-native-vector-icons/Feather";
@@ -157,18 +158,25 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
 
 
   const renderItem = ({ item }) => {
+    const hasProfilePic = item.user && item.user.profile_pic;
+
     return (
       <View style={styles.commentRow}>
-        {/* Profile Icon */}
-        <View style={styles.profileIcon}>
-          <Text style={styles.iconText}>@</Text>
-        </View>
+        {/* Profile Icon or Image */}
+        {hasProfilePic ? (
+          <Image source={{ uri: item.user.profile_pic }} style={styles.profileImage} />
+        ) : (
+          <View style={styles.profileIcon}>
+            <Text style={styles.iconText}>
+              {item.user?.username ? item.user.username.charAt(0).toUpperCase() : '@'}
+            </Text>
+          </View>
+        )}
 
         {/* Comment Details */}
         <View style={styles.commentDetails}>
           <View style={styles.commentHeader}>
-            {error && <Text style={styles.errorText}>{error}</Text>}
-            <Text style={styles.username}>Avowaler</Text>
+            <Text style={styles.username}>{item.user?.username || 'Avowaler'}</Text>
             <Text style={styles.timestamp}>{formatTimeAgo(item.created_at)}</Text>
           </View>
           <Text style={styles.commentText}>{item.content}</Text>
@@ -305,20 +313,29 @@ const styles = StyleSheet.create({
   /* Each comment row */
   commentRow: {
     flexDirection: 'row',
-    paddingVertical: 8,
+    paddingVertical: 12,
+    alignItems: 'flex-start',
   },
-  /* Profile Icon */
+  /* Profile Icon Fallback */
   profileIcon: {
     width: 40,
     height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
-    bottom: 8
+    marginRight: 12,
+    backgroundColor: '#333',
+  },
+  /* Profile Image */
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
   },
   iconText: {
-    color: '#E94560',
-    fontSize: 32,
+    color: '#E0E0E0',
+    fontSize: 18,
     fontWeight: 'bold',
   },
   commentDetails: {
