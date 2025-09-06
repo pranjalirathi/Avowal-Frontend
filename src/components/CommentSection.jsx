@@ -11,6 +11,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   ActivityIndicator,
+  ScrollView
 } from 'react-native';
 import { formatTimeAgo } from "../helpers/formatTimeAgo";
 import Icon from "react-native-vector-icons/Feather";
@@ -28,6 +29,8 @@ import Animated, {
   runOnJS,
 } from "react-native-reanimated";
 
+const EMOJIS = ['😂', '❤️', '😍', '🔥', '😭', '🤔', '👍', '🙏', '💯', '🎉'];
+
 const CommentsModal = ({ visible, onClose, confession_id }) => {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -36,6 +39,10 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
   const [selectedComment, setSelectedComment] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const handleEmojiPress = (emoji) => {
+    setNewComment((prev) => prev + emoji);
+  };
 
   const { userToken } = useContext(AuthContext);
 
@@ -210,16 +217,27 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
 
               {/* Input Section */}
               <SafeAreaView style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Add a comment..."
-                  placeholderTextColor="#999"
-                  value={newComment}
-                  onChangeText={setNewComment}
-                />
-                <TouchableOpacity style={[styles.sendButton, (!newComment.trim() || loading) && styles.disabledButton]} onPress={postComment} disabled={!newComment.trim()}>
-                  <Icon name="send" style={styles.sendIcon} />
-                </TouchableOpacity>
+                <View style={styles.emojiContainer}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always">
+                    {EMOJIS.map((emoji, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleEmojiPress(emoji)} style={styles.emojiButton}>
+                        <Text style={styles.emojiText}>{emoji}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+                <View style={styles.textInputRow}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Add a comment..."
+                    placeholderTextColor="#999"
+                    value={newComment}
+                    onChangeText={setNewComment}
+                  />
+                  <TouchableOpacity style={[styles.sendButton, (!newComment.trim() || loading) && styles.disabledButton]} onPress={postComment} disabled={!newComment.trim()}>
+                    <Icon name="send" style={styles.sendIcon} />
+                  </TouchableOpacity>
+                </View>
               </SafeAreaView>
             </Animated.View>
           </GestureDetector>
@@ -327,14 +345,14 @@ const styles = StyleSheet.create({
   },
   /* Input Section at bottom */
   inputContainer: {
-    flexDirection: 'row',
-    // borderTopWidth: 1,
-    borderColor: '#888',
-    alignItems: 'center',
+    borderTopWidth: 1,
+    borderColor: '#333',
     paddingVertical: 8,
     paddingHorizontal: 10,
-    color: '#E0E0E0',
-    // maxHeight: 60
+  },
+  textInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   input: {
     flex: 1,
@@ -353,6 +371,15 @@ const styles = StyleSheet.create({
     font: 'bold',
     paddingTop: 2,
     paddingRight: 7
+  },
+  emojiContainer: {
+    paddingBottom: 8,
+  },
+  emojiButton: {
+    paddingHorizontal: 8,
+  },
+  emojiText: {
+    fontSize: 24,
   },
   errorText: {
     color: '#D32F2F',
