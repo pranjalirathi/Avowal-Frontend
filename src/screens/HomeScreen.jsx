@@ -226,7 +226,9 @@ const HomeScreen = () => {
               hitSlop={{ top: 25, bottom: 25, left: 25, right: 25 }}
             >
               <Icon name="message-circle" size={18} color="#E94560" />
-              {/* <Text style={styles.commentCount}>{item.comments}</Text> */}
+              {item.comments_count > 0 && (
+                <Text style={styles.commentCount}>{item.comments_count}</Text>
+              )}
             </TouchableOpacity>
           </View>
           <Text style={styles.timeText}>{formatTimeAgo(item.created_at)}</Text>
