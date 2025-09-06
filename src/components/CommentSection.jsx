@@ -16,6 +16,17 @@ import { formatTimeAgo } from "../helpers/formatTimeAgo";
 import Icon from "react-native-vector-icons/Feather";
 import { AuthContext } from '../context/AuthContext';
 import BASE_URL from '../constants/api';
+import {
+  GestureDetector,
+  Gesture,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  runOnJS,
+} from "react-native-reanimated";
 
 const CommentsModal = ({ visible, onClose, confession_id }) => {
   const [comments, setComments] = useState([]);
@@ -27,6 +38,40 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const { userToken } = useContext(AuthContext);
+
+  const translateY = useSharedValue(0);
+  const context = useSharedValue({ y: 0 });
+  const MODAL_HEIGHT = 600; 
+
+  const gesture = Gesture.Pan()
+    .onStart(() => {
+      context.value = { y: translateY.value };
+    })
+    .onUpdate((event) => {
+      translateY.value = event.translationY + context.value.y;
+      translateY.value = Math.max(translateY.value, 0);
+    })
+    .onEnd(() => {
+      if (translateY.value > MODAL_HEIGHT / 3) {
+        runOnJS(onClose)();
+      } else {
+        translateY.value = withSpring(0, { damping: 50 });
+      }
+    });
+
+  useEffect(() => {
+    if (visible) {
+      translateY.value = withSpring(0, { damping: 50 });
+    } else {
+      translateY.value = withSpring(MODAL_HEIGHT, { damping: 50 });
+    }
+  }, [visible]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: translateY.value }],
+    };
+  });
 
   useEffect(() => {
     if (visible && confession_id) {
@@ -126,58 +171,61 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      {/* Dark overlay */}
+    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <View style={styles.modalOverlay}>
+          <TouchableWithoutFeedback onPress={onClose}>
+            <View style={styles.outsideModalArea} />
+          </TouchableWithoutFeedback>
 
+          <GestureDetector gesture={gesture}>
+            <Animated.View style={[styles.modalContainer, animatedStyle]}>
+              {/* Draggable Handle */}
+              <View style={styles.handleContainer}>
+                <View style={styles.handle} />
+              </View>
 
-      <View style={styles.modalOverlay}>
+              {/* Header */}
+              <View style={styles.headerContainer}>
+                <Text style={styles.headerText}>Comments</Text>
+              </View>
 
-      <TouchableWithoutFeedback onPress={onClose}>
-          <View style={styles.outsideModalArea} />
-      </TouchableWithoutFeedback>
-          {/* Modal Container */}
-          <View style={styles.modalContainer}>
-            {/* Header */}
-            <View style={styles.headerContainer}>
-              <Text style={styles.headerText}>Comments</Text>
+              {/* Comments List */}
+              <View style={styles.commentsContainer}>
+              {loading ? (
+                  <ActivityIndicator size="large" color="#E94560" style={styles.loader} />
+                ) : error ? (
+                  <Text style={styles.errorText}>{error}</Text>
+                ) : (
+              <FlatList
+                data={comments}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderItem}
+                style={styles.commentsList}
+                contentContainerStyle={comments.length === 0 ? { flexGrow: 1, justifyContent: 'center' } : null}
+                ListEmptyComponent={<Text style={styles.noCommentsText}>No comments yet</Text>}
+              />
+            )}
             </View>
 
-            {/* Comments List */}
-            <View style={styles.commentsContainer}>
-            {loading ? (
-                <ActivityIndicator size="large" color="#E94560" style={styles.loader} />
-              ) : error ? (
-                <Text style={styles.errorText}>{error}</Text>
-              ) : (
-            <FlatList
-              data={comments}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={renderItem}
-              style={styles.commentsList}
-              contentContainerStyle={comments.length === 0 ? { flexGrow: 1, justifyContent: 'center' } : null}
-              ListEmptyComponent={<Text style={styles.noCommentsText}>No comments yet</Text>}
-            />
-          )}
+              {/* Input Section */}
+              <SafeAreaView style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Add a comment..."
+                  placeholderTextColor="#999"
+                  value={newComment}
+                  onChangeText={setNewComment}
+                />
+                <TouchableOpacity style={[styles.sendButton, (!newComment.trim() || loading) && styles.disabledButton]} onPress={postComment} disabled={!newComment.trim()}>
+                  <Icon name="send" style={styles.sendIcon} />
+                </TouchableOpacity>
+              </SafeAreaView>
+            </Animated.View>
+          </GestureDetector>
           </View>
-
-            {/* Input Section */}
-            <SafeAreaView style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Add a comment..."
-                placeholderTextColor="#999"
-                value={newComment}
-                onChangeText={setNewComment}
-              />
-              <TouchableOpacity style={[styles.sendButton, (!newComment.trim() || loading) && styles.disabledButton]} onPress={postComment} disabled={!newComment.trim()}>
-                <Icon name="send" style={styles.sendIcon} />
-              </TouchableOpacity>
-            </SafeAreaView>
-          </View>
-          
-        </View>
-      
-    </Modal>
+        </GestureHandlerRootView>
+      </Modal>
   );
 };
 
@@ -190,14 +238,26 @@ const styles = StyleSheet.create({
   },
   /* Main container of the modal */
   modalContainer: {
-    // flex: 1,
     backgroundColor: '#1E1E1E',
     height: '90%', 
     maxHeight: 600, 
     minHeight: 300,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
-    padding: 5
+    padding: 5,
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
+  },
+  handleContainer: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  handle: {
+    width: 40,
+    height: 5,
+    backgroundColor: '#444',
+    borderRadius: 2.5,
   },
   /* Header */
   headerContainer: {
