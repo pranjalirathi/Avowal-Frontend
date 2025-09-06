@@ -19,6 +19,7 @@ import { ConfessionsContext } from "../context/ConfessionsContext";
 import BASE_URL from "../constants/api";
 import logo from "../../assets/avowal.png";
 import { ActivityIndicator } from "react-native";
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width } = Dimensions.get("window");
 
@@ -37,6 +38,15 @@ const HomeScreen = () => {
 
   const LIMIT=10;
   const { userToken , logout } = useContext(AuthContext);
+
+  useFocusEffect(
+    useCallback(() => {
+      handleRefresh();
+
+      return () => {
+      };
+    }, [])
+  );
 
   useEffect(() => {
     fetchConfessions();
@@ -145,6 +155,10 @@ const HomeScreen = () => {
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
     setHasMore(true);
+    // Scroll to top instantly when a refresh is triggered
+    if (flatListRef.current) {
+      flatListRef.current.scrollToOffset({ offset: 0, animated: false });
+    }
     fetchConfessions(0, true);
   }, []);
 
