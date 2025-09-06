@@ -1,8 +1,15 @@
 export const formatTimeAgo = (timestamp) => {
-    const createdAt = new Date(timestamp);
+    const utcTimestamp = typeof timestamp === 'string' && !timestamp.endsWith('Z') 
+      ? `${timestamp}Z` 
+      : timestamp;
+      
+    const createdAt = new Date(utcTimestamp);
     const now = new Date();
     const diffInSeconds = Math.floor((now - createdAt) / 1000);
   
+    if (diffInSeconds < 5) {
+      return "just now";
+    }
     if (diffInSeconds < 60) {
       return `${diffInSeconds} sec ago`;
     } 
@@ -21,4 +28,3 @@ export const formatTimeAgo = (timestamp) => {
       return createdAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
     }
   };
-  
