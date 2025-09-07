@@ -128,13 +128,10 @@ const CommentsModal = ({ visible, onClose, confession_id, onCommentPosted }) => 
   
     setError(null);
     setLoading(true);
-
-    // --- DEBUGGING STEP ---
-    // Let's see what userInfo contains when you post a comment
-    console.log('UserInfo in postComment:', JSON.stringify(userInfo, null, 2));
   
     try {
-      const response = await fetch(`${BASE_URL}/confessions/${confession_id}/comments`, {
+      // First API call: Post the comment
+      const postCommentResponse = await fetch(`${BASE_URL}/confessions/${confession_id}/comments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -143,34 +140,47 @@ const CommentsModal = ({ visible, onClose, confession_id, onCommentPosted }) => 
         body: JSON.stringify({ content: newComment.trim() }),
       });
   
-      const data = await response.json();
+      const newCommentData = await postCommentResponse.json();
   
-      if (response.ok) {
-        // Create a new user object for the comment, ensuring the fields match
-        const commentUser = {
-          id: userInfo?.id,
-          username: userInfo?.username,
-          profile_pic: userInfo?.profile_pic, 
-        };
+      if (postCommentResponse.ok) {
+        // Second API call: Fetch the user's latest profile data for the optimistic update
+        const profileResponse = await fetch(`${BASE_URL}/profile_data`, {
+          headers: {
+            "Authorization": `Bearer ${userToken}`
+          }
+        });
+        const profileData = await profileResponse.json();
 
-        setComments((prevComments) => [
-          { 
-            id: data.id, 
-            content: data.content, 
-            created_at: new Date(), 
-            user_id: data.user_id,
-            user: commentUser // Use the newly constructed user object
-          },
-          ...prevComments,
-        ]);
-        setNewComment("");
-        if (onCommentPosted) {
-          runOnJS(onCommentPosted)(confession_id);
+        if (profileResponse.ok) {
+            const commentUser = {
+              id: profileData.data.id,
+              username: profileData.data.username,
+              profile_pic: profileData.data.profile_pic, 
+            };
+
+            setComments((prevComments) => [
+              { 
+                id: newCommentData.id, 
+                content: newCommentData.content, 
+                created_at: new Date(), 
+                user_id: newCommentData.user_id,
+                user: commentUser 
+              },
+              ...prevComments,
+            ]);
+            setNewComment("");
+            if (onCommentPosted) {
+              runOnJS(onCommentPosted)(confession_id);
+            }
+        } else {
+            // Handle profile fetch error, maybe fallback to old data or show a generic one
+            throw new Error("Failed to fetch profile data for comment update.");
         }
       } else {
-        setError(data.detail || "Failed to post comment.");
+        setError(newCommentData.detail || "Failed to post comment.");
       }
     } catch (error) {
+      console.error("Error during post comment flow:", error);
       setError("Network error. Please try again.");
     } finally {
       setLoading(false);
