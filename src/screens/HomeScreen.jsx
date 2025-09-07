@@ -7,7 +7,9 @@ import {
   Dimensions,
   StatusBar,
   TouchableOpacity,
-  Image
+  Image,
+  Modal,
+  Pressable
 } from "react-native";
 import { useState, useEffect, useContext, useCallback , useRef} from "react";
 import Icon from "react-native-vector-icons/Feather";
@@ -35,6 +37,9 @@ const HomeScreen = () => {
   const { newConfessions, clearNewConfessions } = useContext(ConfessionsContext);
   const [error, setError] = useState(null);
   const flatListRef = useRef(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [userDetails, setUserDetails] = useState(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
 
   const LIMIT=10;
   const { userToken , logout } = useContext(AuthContext);
@@ -69,6 +74,42 @@ const HomeScreen = () => {
         return confession;
       })
     );
+  };
+
+  const fetchUserProfile = async (username) => {
+    if (!username) return;
+    setIsProfileLoading(true);
+    setUserDetails(null); // Reset previous details
+
+    try {
+      const response = await fetch(
+        `${BASE_URL}/user?username=${encodeURIComponent(username)}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setUserDetails(data.data);
+    } catch (err) {
+      setUserDetails(null); // Ensure it's null on error
+    } finally {
+      setIsProfileLoading(false);
+    }
+  };
+
+  const handleMentionPress = (username) => {
+    const cleanUsername = username.startsWith('@') ? username.substring(1) : username;
+    setSelectedUser({ username: cleanUsername });
+    fetchUserProfile(cleanUsername);
   };
 
   useEffect(() => {
@@ -235,7 +276,7 @@ const HomeScreen = () => {
         <Text style={styles.confessionText}>
           {parts.map((part, i) =>
             mentionSet.has(part) ? (
-              <Text key={i} style={styles.mentionText}>
+              <Text key={i} style={styles.mentionText} onPress={() => handleMentionPress(part)}>
                 {part}
               </Text>
             ) : (
@@ -330,6 +371,53 @@ const HomeScreen = () => {
         confession_id={selectedConfessionId} 
         onCommentPosted={handleCommentPosted}
       />
+
+      {/* User Profile Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={!!selectedUser}
+        onRequestClose={() => {
+          setSelectedUser(null);
+          setUserDetails(null);
+        }}
+      >
+        <Pressable
+          style={styles.modalContainer}
+          onPress={() => {
+            setSelectedUser(null);
+            setUserDetails(null);
+          }}
+        >
+          <Pressable
+            style={styles.modalContent}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {isProfileLoading ? (
+              <ActivityIndicator size="large" color="#E94560" />
+            ) : userDetails ? (
+            <>
+              <View style={styles.profilePicContainer}>
+                <Image
+                  source={
+                    userDetails.profile_pic
+                      ? { uri: userDetails.profile_pic }
+                      : require('../../assets/blueuser.png')
+                  }
+                  style={styles.profileImage}
+                />
+              </View>
+              <Text style={styles.modalStatus}>{userDetails?.relationship_status || "N/A"}</Text>
+              <Text style={styles.modalName}>{userDetails?.name || "No Name"}</Text>
+              <Text style={styles.modalEmail}>@{userDetails?.username}</Text>
+              <Text style={styles.modalEmail}>{userDetails?.email}</Text>
+            </>
+            ) : (
+              <Text style={styles.modalErrorText}>Failed to load profile</Text>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -466,6 +554,64 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: "#CCCCCC",
+    fontSize: 16,
+  },
+  // Modal Styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: 300,
+    backgroundColor: "#1E1E1E",
+    paddingTop: 40,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    position: "relative",
+  },
+  profilePicContainer: {
+    position: "absolute",
+    top: -40,
+    alignItems: "center",
+    backgroundColor: "#1E1E1E",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: "center",
+  },
+  profileImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
+  modalName: {
+    fontSize: 20,
+    color: "#fff",
+    fontWeight: "bold",
+    marginTop: 10,
+  },
+  modalStatus: {
+    fontSize: 12,
+    color: "#E94560",
+    marginTop: 12,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    borderRadius: 35,
+    backgroundColor: "#333",
+  },
+  modalEmail: {
+    fontSize: 16,
+    color: "#ccc",
+    marginTop: 5,
+  },
+  modalErrorText: {
+    color: "#D32F2F",
+    textAlign: "center",
+    marginTop: 10,
     fontSize: 16,
   },
 });
