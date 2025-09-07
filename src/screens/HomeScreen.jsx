@@ -9,7 +9,9 @@ import {
   TouchableOpacity,
   Image,
   Modal,
-  Pressable
+  Pressable,
+  TextInput,
+  Keyboard
 } from "react-native";
 import { useState, useEffect, useContext, useCallback , useRef} from "react";
 import Icon from "react-native-vector-icons/Feather";
@@ -40,13 +42,33 @@ const HomeScreen = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [userDetails, setUserDetails] = useState(null);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const LIMIT=10;
   const { userToken , logout } = useContext(AuthContext);
 
+  useEffect(() => {
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        if (isSearchActive) {
+          setIsSearchActive(false);
+          setSearchQuery("");
+        }
+      }
+    );
+
+    return () => {
+      keyboardDidHideListener.remove();
+    };
+  }, [isSearchActive]);
+
   useFocusEffect(
     useCallback(() => {
       handleRefresh();
+      setIsSearchActive(false);
+      setSearchQuery("");
 
       return () => {
       };
@@ -314,12 +336,47 @@ const HomeScreen = () => {
     );
   };
 
+  const filteredConfessions = confessions.filter((confession) =>
+    confession.content.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header with logo and title latest */}
       <View style={styles.header}>
-        <Image source={logo} style={styles.logo} />
-        <Text style={styles.title}>Confessions</Text>
+        {isSearchActive ? (
+          <View style={styles.searchHeaderContainer}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search confessions..."
+              placeholderTextColor="#888"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+            />
+            <TouchableOpacity
+              onPress={() => {
+                setIsSearchActive(false);
+                setSearchQuery("");
+              }}
+            >
+              <Icon name="x" size={24} color="#E94560" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            <View style={styles.headerContent}>
+              <Image source={logo} style={styles.logo} />
+              <Text style={styles.title}>Confessions</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => setIsSearchActive(true)}
+              style={styles.searchIcon}
+            >
+              <Icon name="search" size={24} color="#E94560" />
+            </TouchableOpacity>
+          </>
+        )}
       </View>
       
       {loading && page === 0 ? (
@@ -331,7 +388,8 @@ const HomeScreen = () => {
       ) : (
         <FlatList
           ref={flatListRef}
-          data={confessions}
+          data={filteredConfessions}
+          keyboardShouldPersistTaps="handled"
           // keyExtractor={(item, index) => item.id?.toString() || index.toString()}
           keyExtractor={(item, index) => {
             if (item && item.id !== null && item.id !== undefined) {
@@ -431,7 +489,13 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 8,
+    height: 60,
+  },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   logo: {
     width: 30,
@@ -443,10 +507,24 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: "#E94560",
     fontWeight: "bold",
-    marginVertical: 16,
-    marginTop: 8,
-    marginBottom: 5,
-    padding: 10
+    paddingLeft: 10,
+  },
+  searchIcon: {
+    padding: 5,
+  },
+  searchHeaderContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1E1E1E",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    color: "#FFFFFF",
+    fontSize: 16,
   },
   listContent: {
     paddingBottom: 16,
