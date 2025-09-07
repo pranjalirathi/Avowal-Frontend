@@ -57,10 +57,21 @@ const HomeScreen = () => {
     setCommentsVisible(true);
   };
 
-  const handlePostComment = (text) => {
+  const handleCommentPosted = (confessionId) => {
+    setConfessions(prevConfessions => 
+      prevConfessions.map(confession => {
+        if (confession.id === confessionId) {
+          return {
+            ...confession,
+            comments_count: (confession.comments_count || 0) + 1
+          };
+        }
+        return confession;
+      })
+    );
   };
 
-   useEffect(() => {
+  useEffect(() => {
     if (newConfessions.length > 0) {
       //will merge the new fetched with the previous
       setConfessions(prevConfessions => {
@@ -292,7 +303,7 @@ const HomeScreen = () => {
         visible={commentsVisible}
         onClose={() => setCommentsVisible(false)}
         confession_id={selectedConfessionId} 
-        onPostComment={handlePostComment}
+        onCommentPosted={handleCommentPosted}
       />
     </SafeAreaView>
   );

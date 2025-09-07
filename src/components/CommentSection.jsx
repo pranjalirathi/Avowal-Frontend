@@ -32,7 +32,7 @@ import Animated, {
 
 const EMOJIS = ['😂', '❤️', '😍', '🔥', '😭', '🤔', '👍', '🙏', '💯', '🎉'];
 
-const CommentsModal = ({ visible, onClose, confession_id }) => {
+const CommentsModal = ({ visible, onClose, confession_id, onCommentPosted }) => {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newComment, setNewComment] = useState('');
@@ -41,11 +41,13 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  const listRef = React.useRef(null); // Create a ref for the FlatList
+
   const handleEmojiPress = (emoji) => {
     setNewComment((prev) => prev + emoji);
   };
 
-  const { userToken } = useContext(AuthContext);
+  const { userToken, userInfo } = useContext(AuthContext);
 
   const translateY = useSharedValue(0);
   const context = useSharedValue({ y: 0 });
@@ -65,7 +67,8 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
       } else {
         translateY.value = withSpring(0, { damping: 50 });
       }
-    });
+    })
+    .simultaneousWithExternalGesture(listRef); // Allow FlatList to scroll
 
   useEffect(() => {
     if (visible) {
@@ -104,7 +107,7 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
       const data = await response.json();
 
       if (response.ok) {
-        setComments(data.message.reverse());
+        setComments(data.message);
       } else {
         setError(data.detail?.[0]?.msg || "Failed to fetch comments.");
       }
@@ -125,6 +128,10 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
   
     setError(null);
     setLoading(true);
+
+    // --- DEBUGGING STEP ---
+    // Let's see what userInfo contains when you post a comment
+    console.log('UserInfo in postComment:', JSON.stringify(userInfo, null, 2));
   
     try {
       const response = await fetch(`${BASE_URL}/confessions/${confession_id}/comments`, {
@@ -139,12 +146,27 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
       const data = await response.json();
   
       if (response.ok) {
-        // Add new comment to the list without fetching again
+        // Create a new user object for the comment, ensuring the fields match
+        const commentUser = {
+          id: userInfo?.id,
+          username: userInfo?.username,
+          profile_pic: userInfo?.profile_pic, 
+        };
+
         setComments((prevComments) => [
-          { id: data.id, content: data.content, created_at: new Date(), user_id: data.user_id },
+          { 
+            id: data.id, 
+            content: data.content, 
+            created_at: new Date(), 
+            user_id: data.user_id,
+            user: commentUser // Use the newly constructed user object
+          },
           ...prevComments,
         ]);
         setNewComment("");
+        if (onCommentPosted) {
+          runOnJS(onCommentPosted)(confession_id);
+        }
       } else {
         setError(data.detail || "Failed to post comment.");
       }
@@ -205,23 +227,31 @@ const CommentsModal = ({ visible, onClose, confession_id }) => {
                 <Text style={styles.headerText}>Comments</Text>
               </View>
 
-              {/* Comments List */}
-              <View style={styles.commentsContainer}>
+              {/* Comments List - FIXED SCROLLING */}
               {loading ? (
-                  <ActivityIndicator size="large" color="#E94560" style={styles.loader} />
-                ) : error ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color="#E94560" />
+                </View>
+              ) : error ? (
+                <View style={styles.errorContainer}>
                   <Text style={styles.errorText}>{error}</Text>
-                ) : (
-              <FlatList
-                data={comments}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={renderItem}
-                style={styles.commentsList}
-                contentContainerStyle={comments.length === 0 ? { flexGrow: 1, justifyContent: 'center' } : null}
-                ListEmptyComponent={<Text style={styles.noCommentsText}>No comments yet</Text>}
-              />
-            )}
-            </View>
+                </View>
+              ) : (
+                <FlatList
+                  ref={listRef}
+                  data={comments}
+                  keyExtractor={(item) => item.id.toString()}
+                  renderItem={renderItem}
+                  style={styles.commentsList}
+                  contentContainerStyle={[
+                    styles.commentsContentContainer,
+                    comments.length === 0 && styles.emptyCommentsContainer
+                  ]}
+                  ListEmptyComponent={<Text style={styles.noCommentsText}>No comments yet</Text>}
+                  showsVerticalScrollIndicator={true}
+                  bounces={true}
+                />
+              )}
 
               {/* Input Section */}
               <SafeAreaView style={styles.inputContainer}>
@@ -274,6 +304,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     width: '100%',
+    flexDirection: 'column', // Ensure proper flex direction
   },
   handleContainer: {
     alignItems: 'center',
@@ -298,17 +329,39 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#E0E0E0',
   },
-  loader: {
-    marginVertical: 20,
-    alignSelf: "center",
+  // Loading and error containers
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
   },
   noCommentsText: {
     textAlign: "center",
     color: "#999",
-    paddingVertical: 20,
+    fontSize: 16,
   },
+  // New style for comments container
+  commentsContainer: {
+    flex: 1,
+  },
+  // FlatList styles
   commentsList: {
+    flex: 1,
     paddingHorizontal: 10,
+  },
+  commentsContentContainer: {
+    paddingBottom: 10, // Add some bottom padding
+  },
+  emptyCommentsContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   /* Each comment row */
   commentRow: {
@@ -366,6 +419,7 @@ const styles = StyleSheet.create({
     borderColor: '#333',
     paddingVertical: 8,
     paddingHorizontal: 10,
+    backgroundColor: '#1E1E1E', // Ensure input area has background
   },
   textInputRow: {
     flexDirection: 'row',
@@ -401,17 +455,11 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#D32F2F',
     textAlign: 'center',
-    marginVertical: 10,
+    fontSize: 16,
   },
   disabledButton: {
     opacity: 0.4, 
   },  
-  commentsContainer: {
-    flex: 1,
-  },
-  commentsList: {
-    flexGrow: 0,
-  },
   outsideModalArea: {
     flex: 1,
   },
