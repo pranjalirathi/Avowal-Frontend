@@ -29,6 +29,7 @@ const debounce = (func, delay) => {
 const FeedScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
+  const [topUsers, setTopUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -37,12 +38,63 @@ const FeedScreen = () => {
 
   const { userToken, logout } = useContext(AuthContext);
 
+  const fetchTopUsers = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${BASE_URL}/topsearched_usernames`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${userToken}`,
+        },
+      });
+
+      if (response.status === 401) {
+        logout();
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data && data.data) {
+        const transformedData = data.data.map((user, index) => {
+          let imageUrl = user.profile_pic;
+          if (imageUrl && !imageUrl.startsWith("http")) {
+            imageUrl = `${BASE_URL}/${imageUrl}`;
+          }
+          return {
+            id: user.username || String(index),
+            name: user.username,
+            email: user.email || "No Email",
+            username: user.username || "",
+            status: user.status || "No Status",
+            image: imageUrl || null,
+          };
+        });
+        setTopUsers(transformedData);
+      } else {
+        setTopUsers([]);
+      }
+    } catch (err) {
+      setError("Failed to fetch top users. Please try again.");
+      setTopUsers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       setSearchQuery("");
       setFilteredData([]);
+      fetchTopUsers();
       return () => {}; 
-    }, [])
+    }, [userToken])
   );
   
   const searchUsers = async (query) => {
@@ -112,7 +164,11 @@ const FeedScreen = () => {
   const handleSearch = (text) => {
     const lowerCaseQuery = text.toLowerCase();
     setSearchQuery(lowerCaseQuery);
-    debouncedSearch(text.trim().toLowerCase());
+    if (text.trim() === "") {
+      setFilteredData([]);
+    } else {
+      debouncedSearch(text.trim().toLowerCase());
+    }
   };
 
   const fetchUserProfile = async (username) => {
@@ -172,6 +228,10 @@ const FeedScreen = () => {
         />
       </View>
 
+      {!searchQuery.trim() && (
+        <Text style={styles.topUsersHeading}>Top Searched Usernames</Text>
+      )}
+
       {/* Loading indicator */}
       {isLoading && (
         <View style={styles.loaderContainer}>
@@ -183,7 +243,7 @@ const FeedScreen = () => {
       {error && <Text style={styles.errorText}>{error}</Text>}
 
       <FlatList
-        data={filteredData}
+        data={searchQuery.trim() ? filteredData : topUsers}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
@@ -295,6 +355,13 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: "#fff",
+  },
+  topUsersHeading: {
+    color: "#ccc",
+    fontSize: 12,
+    marginTop: 20,
+    marginBottom: 10,
+    paddingLeft: 5,
   },
   loaderContainer: {
     paddingVertical: 10,
