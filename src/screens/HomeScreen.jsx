@@ -214,6 +214,37 @@ const HomeScreen = () => {
     const isLastItem = index === confessions.length - 1;
 
     const confessionText = item.content || "";
+    const mentions = item.mentions || [];
+
+    const renderParsedContent = () => {
+      if (!mentions || mentions.length === 0) {
+        return <Text style={styles.confessionText}>{confessionText}</Text>;
+      }
+
+      const mentionsRegex = new RegExp(
+        `(@(?:${mentions.map(m => m.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')}))`,
+        'g'
+      );
+
+      const parts = confessionText.split(mentionsRegex).filter(Boolean);
+
+      // creating a set for all mentions : o(1) mai milega
+      const mentionSet = new Set(mentions.map(m => `@${m}`));
+
+      return (
+        <Text style={styles.confessionText}>
+          {parts.map((part, i) =>
+            mentionSet.has(part) ? (
+              <Text key={i} style={styles.mentionText}>
+                {part}
+              </Text>
+            ) : (
+              part
+            )
+          )}
+        </Text>
+      );
+    };
     
     return (
       <View style={[styles.card, isLastItem && { marginBottom: 70 }]}>
@@ -222,13 +253,7 @@ const HomeScreen = () => {
             <Text style={styles.trendingText}>Trending ❤‍🔥</Text>
           </View>
         )}
-        <Text style={styles.confessionText}>
-          {renderContentWithMentions(
-            confessionText,
-            styles.confessionText,
-            styles.mentionText
-          )}
-        </Text>
+        {renderParsedContent()}
         <View style={styles.bottomRow}>
           <View style={styles.leftRow}>
             <TouchableOpacity
