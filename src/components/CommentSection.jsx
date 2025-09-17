@@ -247,7 +247,7 @@ const CommentsModal = ({ visible, onClose, confession_id, onCommentPosted }) => 
                     comments.length === 0 && styles.emptyCommentsContainer
                   ]}
                   ListEmptyComponent={<Text style={styles.noCommentsText}>No comments yet</Text>}
-                  showsVerticalScrollIndicator={true}
+                  showsVerticalScrollIndicator={false}
                   bounces={true}
                   nestedScrollEnabled={true}
                 />
