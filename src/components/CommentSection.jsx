@@ -12,7 +12,7 @@ import {
   TouchableWithoutFeedback,
   ActivityIndicator,
   ScrollView,
-  Image // Added Image import
+  Image
 } from 'react-native';
 import { formatTimeAgo } from "../helpers/formatTimeAgo";
 import Icon from "react-native-vector-icons/Feather";
@@ -41,7 +41,7 @@ const CommentsModal = ({ visible, onClose, confession_id, onCommentPosted }) => 
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const listRef = React.useRef(null); // Create a ref for the FlatList
+  const listRef = React.useRef(null);
 
   const handleEmojiPress = (emoji) => {
     setNewComment((prev) => prev + emoji);
@@ -51,24 +51,21 @@ const CommentsModal = ({ visible, onClose, confession_id, onCommentPosted }) => 
 
   const translateY = useSharedValue(0);
   const context = useSharedValue({ y: 0 });
-  const MODAL_HEIGHT = 600; 
+  const MODAL_HEIGHT = 600;
 
   const gesture = Gesture.Pan()
-    .onStart(() => {
-      context.value = { y: translateY.value };
-    })
     .onUpdate((event) => {
-      translateY.value = event.translationY + context.value.y;
-      translateY.value = Math.max(translateY.value, 0);
-    })
-    .onEnd(() => {
-      if (translateY.value > MODAL_HEIGHT / 3) {
-        runOnJS(onClose)();
-      } else {
-        translateY.value = withSpring(0, { damping: 50 });
+      if (event.translationY > 0) {
+        translateY.value = event.translationY;
       }
     })
-    .simultaneousWithExternalGesture(listRef); // Allow FlatList to scroll
+    .onEnd((event) => {
+      if (event.translationY > 100) {
+        translateY.value = withSpring(MODAL_HEIGHT, {}, () => runOnJS(onClose)());
+      } else {
+        translateY.value = withSpring(0);
+      }
+    });
 
   useEffect(() => {
     if (visible) {
@@ -91,10 +88,8 @@ const CommentsModal = ({ visible, onClose, confession_id, onCommentPosted }) => 
     }
   }, [visible, confession_id]);
 
-
   // ------API FOR FETCHING COMMENTS-------
   const fetchComments = async () => {
-
     if (!confession_id || isNaN(confession_id)) {
       setError("Invalid confession_id:", confession_id);
       return;
@@ -117,20 +112,18 @@ const CommentsModal = ({ visible, onClose, confession_id, onCommentPosted }) => 
       setLoading(false);
     }
   };
-  
 
-  // ------API FOR POSING A COMMENT ON A CONFESSION-------
+  // ------API FOR POSTING A COMMENT ON A CONFESSION-------
   const postComment = async () => {
     if (!newComment.trim()) {
       setError("Comment cannot be empty.");
       return;
     }
-  
+
     setError(null);
     setLoading(true);
-  
+
     try {
-      // First API call: Post the comment
       const postCommentResponse = await fetch(`${BASE_URL}/confessions/${confession_id}/comments`, {
         method: "POST",
         headers: {
@@ -139,11 +132,10 @@ const CommentsModal = ({ visible, onClose, confession_id, onCommentPosted }) => 
         },
         body: JSON.stringify({ content: newComment.trim() }),
       });
-  
+
       const newCommentData = await postCommentResponse.json();
-  
+
       if (postCommentResponse.ok) {
-        // Second API call: Fetch the user's latest profile data for the optimistic update
         const profileResponse = await fetch(`${BASE_URL}/profile_data`, {
           headers: {
             "Authorization": `Bearer ${userToken}`
@@ -152,29 +144,28 @@ const CommentsModal = ({ visible, onClose, confession_id, onCommentPosted }) => 
         const profileData = await profileResponse.json();
 
         if (profileResponse.ok) {
-            const commentUser = {
-              id: profileData.data.id,
-              username: profileData.data.username,
-              profile_pic: profileData.data.profile_pic, 
-            };
+          const commentUser = {
+            id: profileData.data.id,
+            username: profileData.data.username,
+            profile_pic: profileData.data.profile_pic,
+          };
 
-            setComments((prevComments) => [
-              { 
-                id: newCommentData.id, 
-                content: newCommentData.content, 
-                created_at: new Date(), 
-                user_id: newCommentData.user_id,
-                user: commentUser 
-              },
-              ...prevComments,
-            ]);
-            setNewComment("");
-            if (onCommentPosted) {
-              runOnJS(onCommentPosted)(confession_id);
-            }
+          setComments((prevComments) => [
+            {
+              id: newCommentData.id,
+              content: newCommentData.content,
+              created_at: new Date(),
+              user_id: newCommentData.user_id,
+              user: commentUser
+            },
+            ...prevComments,
+          ]);
+          setNewComment("");
+          if (onCommentPosted) {
+            runOnJS(onCommentPosted)(confession_id);
+          }
         } else {
-            // Handle profile fetch error, maybe fallback to old data or show a generic one
-            throw new Error("Failed to fetch profile data for comment update.");
+          throw new Error("Failed to fetch profile data for comment update.");
         }
       } else {
         setError(newCommentData.detail || "Failed to post comment.");
@@ -186,15 +177,12 @@ const CommentsModal = ({ visible, onClose, confession_id, onCommentPosted }) => 
       setLoading(false);
     }
   };
-  
-
 
   const renderItem = ({ item }) => {
     const hasProfilePic = item.user && item.user.profile_pic;
 
     return (
       <View style={styles.commentRow}>
-        {/* Profile Icon or Image */}
         {hasProfilePic ? (
           <Image source={{ uri: item.user.profile_pic }} style={styles.profileImage} />
         ) : (
@@ -205,7 +193,6 @@ const CommentsModal = ({ visible, onClose, confession_id, onCommentPosted }) => 
           </View>
         )}
 
-        {/* Comment Details */}
         <View style={styles.commentDetails}>
           <View style={styles.commentHeader}>
             <Text style={styles.username}>{item.user?.username || 'Avowaler'}</Text>
@@ -225,19 +212,21 @@ const CommentsModal = ({ visible, onClose, confession_id, onCommentPosted }) => 
             <View style={styles.outsideModalArea} />
           </TouchableWithoutFeedback>
 
-          <GestureDetector gesture={gesture}>
-            <Animated.View style={[styles.modalContainer, animatedStyle]}>
-              {/* Draggable Handle */}
+          <Animated.View style={[styles.modalContainer, animatedStyle]}>
+            {/* Draggable Handle - Only this area should trigger the gesture */}
+            <GestureDetector gesture={gesture}>
               <View style={styles.handleContainer}>
                 <View style={styles.handle} />
               </View>
+            </GestureDetector>
 
-              {/* Header */}
-              <View style={styles.headerContainer}>
-                <Text style={styles.headerText}>Comments</Text>
-              </View>
+            {/* Header */}
+            <View style={styles.headerContainer}>
+              <Text style={styles.headerText}>Comments</Text>
+            </View>
 
-              {/* Comments List - FIXED SCROLLING */}
+            {/* Comments List - Now properly scrollable */}
+            <View style={styles.commentsContainer}>
               {loading ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="large" color="#E94560" />
@@ -260,65 +249,70 @@ const CommentsModal = ({ visible, onClose, confession_id, onCommentPosted }) => 
                   ListEmptyComponent={<Text style={styles.noCommentsText}>No comments yet</Text>}
                   showsVerticalScrollIndicator={true}
                   bounces={true}
+                  nestedScrollEnabled={true}
                 />
               )}
+            </View>
 
-              {/* Input Section */}
-              <SafeAreaView style={styles.inputContainer}>
-                <View style={styles.emojiContainer}>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always">
-                    {EMOJIS.map((emoji, index) => (
-                      <TouchableOpacity key={index} onPress={() => handleEmojiPress(emoji)} style={styles.emojiButton}>
-                        <Text style={styles.emojiText}>{emoji}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-                <View style={styles.textInputRow}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Add a comment..."
-                    placeholderTextColor="#999"
-                    value={newComment}
-                    onChangeText={setNewComment}
-                  />
-                  <TouchableOpacity style={[styles.sendButton, (!newComment.trim() || loading) && styles.disabledButton]} onPress={postComment} disabled={!newComment.trim()}>
-                    <Icon name="send" style={styles.sendIcon} />
-                  </TouchableOpacity>
-                </View>
-              </SafeAreaView>
-            </Animated.View>
-          </GestureDetector>
-          </View>
-        </GestureHandlerRootView>
-      </Modal>
+            {/* Input Section */}
+            <SafeAreaView style={styles.inputContainer}>
+              <View style={styles.emojiContainer}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always">
+                  {EMOJIS.map((emoji, index) => (
+                    <TouchableOpacity key={index} onPress={() => handleEmojiPress(emoji)} style={styles.emojiButton}>
+                      <Text style={styles.emojiText}>{emoji}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+              <View style={styles.textInputRow}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Add a comment..."
+                  placeholderTextColor="#999"
+                  value={newComment}
+                  onChangeText={setNewComment}
+                />
+                <TouchableOpacity 
+                  style={[styles.sendButton, (!newComment.trim() || loading) && styles.disabledButton]} 
+                  onPress={postComment} 
+                  disabled={!newComment.trim()}
+                >
+                  <Icon name="send" style={styles.sendIcon} />
+                </TouchableOpacity>
+              </View>
+            </SafeAreaView>
+          </Animated.View>
+        </View>
+      </GestureHandlerRootView>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  /* Opaque background for dim */
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'flex-end',
   },
-  /* Main container of the modal */
   modalContainer: {
     backgroundColor: '#1E1E1E',
-    height: '90%', 
-    maxHeight: 600, 
-    minHeight: 300,
+    height: '85%',
+    maxHeight: 650,
+    minHeight: 400,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
-    padding: 5,
     position: 'absolute',
     bottom: 0,
     width: '100%',
-    flexDirection: 'column', // Ensure proper flex direction
+    display: 'flex',
+    flexDirection: 'column',
   },
   handleContainer: {
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    minHeight: 40,
   },
   handle: {
     width: 40,
@@ -326,20 +320,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#444',
     borderRadius: 2.5,
   },
-  /* Header */
   headerContainer: {
     alignItems: 'center',
     paddingVertical: 10,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#888',
+    borderBottomColor: '#333',
   },
   headerText: {
-    padding: 8,
     fontSize: 18,
     fontWeight: 'bold',
     color: '#E0E0E0',
   },
-  // Loading and error containers
+  commentsContainer: {
+    flex: 1,
+    paddingHorizontal: 10,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -351,35 +347,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
   },
+  errorText: {
+    color: '#D32F2F',
+    textAlign: 'center',
+    fontSize: 16,
+  },
+  commentsList: {
+    flex: 1,
+  },
+  commentsContentContainer: {
+    paddingVertical: 10,
+    flexGrow: 1,
+  },
+  emptyCommentsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   noCommentsText: {
     textAlign: "center",
     color: "#999",
     fontSize: 16,
   },
-  // New style for comments container
-  commentsContainer: {
-    flex: 1,
-  },
-  // FlatList styles
-  commentsList: {
-    flex: 1,
-    paddingHorizontal: 10,
-  },
-  commentsContentContainer: {
-    paddingBottom: 10, // Add some bottom padding
-  },
-  emptyCommentsContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  /* Each comment row */
   commentRow: {
     flexDirection: 'row',
     paddingVertical: 12,
+    paddingHorizontal: 5,
     alignItems: 'flex-start',
   },
-  /* Profile Icon Fallback */
   profileIcon: {
     width: 40,
     height: 40,
@@ -389,7 +384,6 @@ const styles = StyleSheet.create({
     marginRight: 12,
     backgroundColor: '#333',
   },
-  /* Profile Image */
   profileImage: {
     width: 40,
     height: 40,
@@ -422,14 +416,24 @@ const styles = StyleSheet.create({
   commentText: {
     fontSize: 14,
     color: '#E0E0E0',
+    lineHeight: 20,
   },
-  /* Input Section at bottom */
   inputContainer: {
     borderTopWidth: 1,
     borderColor: '#333',
     paddingVertical: 8,
-    paddingHorizontal: 10,
-    backgroundColor: '#1E1E1E', // Ensure input area has background
+    paddingHorizontal: 15,
+    backgroundColor: '#1E1E1E',
+  },
+  emojiContainer: {
+    paddingBottom: 8,
+  },
+  emojiButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  emojiText: {
+    fontSize: 24,
   },
   textInputRow: {
     flexDirection: 'row',
@@ -438,42 +442,23 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: 40,
-    paddingHorizontal: 10,
-    borderRadius: 20,
+    paddingHorizontal: 15,
     color: '#E0E0E0',
   },
   sendButton: {
     marginLeft: 10,
-    bottom: 5
+    padding: 8,
   },
   sendIcon: {
     fontSize: 24,
     color: '#E94560',
-    font: 'bold',
-    paddingTop: 2,
-    paddingRight: 7
-  },
-  emojiContainer: {
-    paddingBottom: 8,
-  },
-  emojiButton: {
-    paddingHorizontal: 8,
-  },
-  emojiText: {
-    fontSize: 24,
-  },
-  errorText: {
-    color: '#D32F2F',
-    textAlign: 'center',
-    fontSize: 16,
   },
   disabledButton: {
-    opacity: 0.4, 
-  },  
+    opacity: 0.4,
+  },
   outsideModalArea: {
     flex: 1,
   },
-  
 });
 
 export default CommentsModal;
