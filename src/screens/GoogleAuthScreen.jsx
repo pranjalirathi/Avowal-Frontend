@@ -188,7 +188,7 @@ const { width } = Dimensions.get("window");
 
 const GoogleAuthScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { googleSignIn } = useContext(AuthContext);
+  const { googleSignIn, authError, setAuthError } = useContext(AuthContext);
 
   const handleGoogleSignIn = async () => {
     console.log("🔘 Google Sign-In button pressed");
@@ -199,11 +199,20 @@ const GoogleAuthScreen = () => {
     }
 
     setIsLoading(true);
-    const result = await googleSignIn();
-    if (!result.success) {
-      Alert.alert("Authentication Failed", result.error || "Please try again");
+    try {
+      const result = await googleSignIn();
+      if (!result.success) {
+        // Don't show alert for cancellation
+        if (result.error !== "Sign-in was cancelled") {
+          setAuthError(result.error || "Please try again");
+        }
+      }
+    } catch (error) {
+      console.error("Sign-in error:", error);
+      setAuthError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
@@ -218,6 +227,12 @@ const GoogleAuthScreen = () => {
         <Text style={styles.subtitle}>
           Sign in with your college Google account to continue
         </Text>
+
+        {authError && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{authError}</Text>
+          </View>
+        )}
 
         <TouchableOpacity
           style={[styles.googleButton, isLoading && styles.disabledButton]}
@@ -329,6 +344,18 @@ const styles = StyleSheet.create({
     color: "#A1A1A1",
     fontSize: 14,
     marginBottom: 8,
+    textAlign: "center",
+  },
+  errorContainer: {
+    backgroundColor: "rgba(233, 69, 96, 0.1)",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    width: "100%",
+  },
+  errorText: {
+    color: "#E94560",
+    fontSize: 14,
     textAlign: "center",
   },
 });
