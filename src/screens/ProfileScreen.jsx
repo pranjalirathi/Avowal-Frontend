@@ -307,6 +307,14 @@ const ProfileScreen = () => {
     );
   }
 
+  if (!profileData) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <Text style={styles.errorText}>Could not load profile data.</Text>
+      </SafeAreaView>
+    );
+  }
+
 
   return (
     <SafeAreaView style={styles.container}>

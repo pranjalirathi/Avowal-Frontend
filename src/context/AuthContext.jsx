@@ -1,10 +1,8 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { WEB_CLIENT_ID } from "../config/GoogleConfig";
 import BASE_URL from "../constants/api";
-
-
+import {WEB_CLIENT_ID} from '@env';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -37,10 +35,9 @@ export const AuthProvider = ({ children }) => {
 
   const handleGoogleResponse = async (idToken) => {
     try {
-      console.log(`Line : 40 : ${idToken}`)
-      setIsLoading(true);
-      console.log("Sending id_token to backend:", idToken?.slice?.(0, 20), "...");
 
+      setIsLoading(true);
+    
       const res = await fetch(`${BASE_URL}/auth/google`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

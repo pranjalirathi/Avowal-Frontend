@@ -1,9 +1,9 @@
 // src/config/GoogleSignInConfig.js
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-
+import { WEB_CLIENT_ID } from '@env';
 export const configureGoogleSignIn = () => {
   GoogleSignin.configure({
-    webClientId: '287084527646-nglimmvtjp2q6g2433qprub83c305gga.apps.googleusercontent.com',
+    webClientId: WEB_CLIENT_ID,
     offlineAccess: true,
     hostedDomain: '', // Optional: restrict to specific domain
     forceCodeForRefreshToken: true,
